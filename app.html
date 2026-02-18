@@ -1497,11 +1497,13 @@ function setProUI(pro) {
   }
 
   // Show/hide pro tab
-  const finTab = document.querySelector('[onclick="switchSection('financement')"]');
-  if (finTab) {
-    finTab.style.opacity = pro ? '1' : '.5';
-    finTab.title = pro ? '' : 'Fonctionnalité Pro — 49€/mois';
-  }
+  const allTabs = document.querySelectorAll('.nav-tab');
+  allTabs.forEach(t => {
+    if (t.textContent.trim() === 'Financement') {
+      t.style.opacity = pro ? '1' : '.5';
+      t.title = pro ? '' : 'Fonctionnalité Pro — 49€/mois';
+    }
+  });
 
   // PDF button
   const pdfBtn = document.getElementById('pdf-btn');
