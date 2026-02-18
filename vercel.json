@@ -1,17 +1,10 @@
 {
   "version": 2,
   "name": "mdbpro",
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/app", "dest": "/app.html" },
-    { "src": "/success", "dest": "/success.html" },
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/success", "destination": "/success.html" }
   ],
-  "env": {
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "STRIPE_PRICE_ID": "@stripe_price_id",
-    "ALLOWED_ORIGIN": "https://mdbpro.fr"
-  },
   "headers": [
     {
       "source": "/(.*)",
