@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bienvenue dans MDB Pro ✓</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--s1:#12121a;--border:#2a2a3e;--accent:#e8d5a0;--purple:#7c6fcd;--green:#4ade80;--muted:#6b6b8a;--text:#e8e8f0;--fh:'Syne',sans-serif;--fm:'DM Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(124,111,205,.12),transparent 70%);pointer-events:none}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:3rem 2.5rem;max-width:480px;width:100%;position:relative;z-index:1}
+.icon{font-size:3.5rem;margin-bottom:1.5rem;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both}
+h1{font-family:var(--fh);font-size:2rem;font-weight:800;letter-spacing:-1px;color:var(--accent);margin-bottom:.65rem}
+.sub{font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:2rem}
+.features{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:2rem;display:flex;flex-direction:column;gap:.55rem;text-align:left}
+.feat-row{display:flex;align-items:center;gap:.65rem;font-size:.82rem;color:var(--text)}
+.feat-row span:first-child{color:var(--green);font-size:1rem}
+.cta{display:block;background:var(--purple);color:#fff;padding:.85rem;border-radius:10px;font-family:var(--fh);font-size:.95rem;font-weight:700;text-decoration:none;transition:all .2s;margin-bottom:.75rem}
+.cta:hover{background:#9b90e0;transform:translateY(-2px)}
+.sec{font-size:.68rem;color:var(--muted)}
+.logo{font-family:var(--fh);font-weight:800;font-size:1.2rem;color:var(--accent);margin-bottom:2rem}
+.logo span{color:var(--purple)}
+.loading{font-size:.78rem;color:var(--muted);margin-top:.75rem;min-height:1.2rem}
+@keyframes pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">MDB<span>·</span>PRO</div>
+  <div class="icon">🎉</div>
+  <h1>Bienvenue dans MDB Pro</h1>
+  <p class="sub">Votre abonnement est actif. Toutes les fonctionnalités Pro sont maintenant débloquées.</p>
+
+  <div class="features">
+    <div class="feat-row"><span>✓</span><span>Export PDF dossier banque professionnel</span></div>
+    <div class="feat-row"><span>✓</span><span>Sensibilité Euribor ±1% (5 scénarios)</span></div>
+    <div class="feat-row"><span>✓</span><span>Tableau de tirage mensuel complet</span></div>
+    <div class="feat-row"><span>✓</span><span>Comparatif in fine vs amortissable</span></div>
+    <div class="feat-row"><span>✓</span><span>Sauvegarde de 50 simulations</span></div>
+  </div>
+
+  <a href="/app.html" class="cta" id="app-link">Ouvrir le simulateur Pro →</a>
+  <p class="sec">Un email de confirmation a été envoyé par Stripe.<br>Résiliation possible à tout moment depuis votre espace client.</p>
+  <p class="loading" id="status-msg">Activation de votre session…</p>
+</div>
+
+<script>
+// Get session_id from Stripe redirect
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get('session_id');
+const statusMsg = document.getElementById('status-msg');
+const appLink = document.getElementById('app-link');
+
+async function activateSession() {
+  if (!sessionId) {
+    statusMsg.textContent = '⚠ Session introuvable. Contactez support@mdbpro.fr';
+    return;
+  }
+
+  try {
+    statusMsg.textContent = 'Vérification du paiement…';
+    const res = await fetch('/api/activate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    });
+
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem('mdbpro_token', data.token);
+      statusMsg.innerHTML = '<span style="color:var(--green)">✓ Session activée — accès Pro débloqué</span>';
+      // Redirect to app after 1.5s
+      setTimeout(() => { window.location.href = '/app.html'; }, 1500);
+    } else {
+      statusMsg.textContent = '⚠ ' + (data.error || 'Erreur activation. Contactez support@mdbpro.fr');
+    }
+  } catch (e) {
+    // Offline fallback — store session_id as temp token
+    localStorage.setItem('mdbpro_token', 'session_' + sessionId);
+    statusMsg.innerHTML = '<span style="color:var(--green)">✓ Accès activé</span>';
+    setTimeout(() => { window.location.href = '/app.html'; }, 1500);
+  }
+}
+
+activateSession();
+</script>
+</body>
+</html>

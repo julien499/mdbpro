@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDB Pro — Simulateur Marchand de Biens | mdbpro.fr</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3e;
+  --accent:#e8d5a0;--accent2:#7c6fcd;--green:#4ade80;--red:#f87171;
+  --orange:#fb923c;--text:#e8e8f0;--muted:#6b6b8a;
+  --fh:'Syne',sans-serif;--fm:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.4}
+
+/* HEADER */
+header{border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,10,15,.95);backdrop-filter:blur(20px);z-index:100}
+.logo{font-family:var(--fh);font-weight:800;font-size:1.4rem;letter-spacing:-.5px;color:var(--accent)}
+.logo span{color:var(--accent2)}
+.nav-tabs{display:flex;gap:.25rem;background:var(--surface);padding:.25rem;border-radius:8px;border:1px solid var(--border)}
+.nav-tab{padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:var(--fm);font-size:.75rem;font-weight:500;color:var(--muted);border:none;background:none;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
+.nav-tab.active{background:var(--accent2);color:#fff}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* LAYOUT */
+.app{display:flex;height:calc(100vh - 61px)}
+.sidebar{width:330px;border-right:1px solid var(--border);overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem}
+.card-title{font-family:var(--fh);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}
+
+/* FORM */
+.field{margin-bottom:.8rem}
+.field label{display:block;font-size:.68rem;color:var(--muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.8px}
+.field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;color:var(--text);font-family:var(--fm);font-size:.83rem;transition:border-color .2s;outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent2)}
+.field input[type="range"]{padding:0;height:4px;accent-color:var(--accent2);cursor:pointer;border:none;background:none}
+.range-row{display:flex;align-items:center;gap:.6rem}
+.range-val{font-size:.85rem;font-weight:500;color:var(--accent);min-width:60px;text-align:right}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+
+/* TOGGLE */
+.toggle-group{display:flex;gap:.2rem;background:var(--surface2);padding:3px;border-radius:8px;border:1px solid var(--border);margin-bottom:.75rem}
+.toggle-opt{flex:1;text-align:center;padding:.32rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border-radius:6px;transition:all .2s;color:var(--muted);user-select:none}
+.toggle-opt.active{background:var(--accent2);color:#fff}
+
+/* METRICS */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),transparent)}
+.metric.green::before{background:linear-gradient(90deg,var(--green),transparent)}
+.metric.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.metric.orange::before{background:linear-gradient(90deg,var(--orange),transparent)}
+.metric-label{font-size:.63rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.4rem}
+.metric-value{font-family:var(--fh);font-size:1.5rem;font-weight:800;line-height:1}
+.metric-value.positive{color:var(--green)}.metric-value.negative{color:var(--red)}.metric-value.neutral{color:var(--accent)}.metric-value.warning{color:var(--orange)}
+.metric-sub{font-size:.68rem;color:var(--muted);margin-top:.3rem}
+
+/* WATERFALL */
+.waterfall{display:flex;flex-direction:column;gap:.4rem}
+.wf-row{display:flex;align-items:center;gap:.9rem;padding:.55rem .8rem;border-radius:8px;font-size:.8rem;transition:background .15s}
+.wf-row:hover{background:var(--surface2)}
+.wf-row.total{background:var(--surface2);border:1px solid var(--border);font-weight:600;font-family:var(--fh);margin-top:.2rem}
+.wf-row.sub{padding-left:1.6rem}
+.wf-row.separator{border-top:1px solid var(--border);padding-top:.75rem;margin-top:.2rem}
+.wf-label{flex:1;color:var(--muted)}.wf-row.total .wf-label{color:var(--text)}
+.wf-amount{font-family:var(--fm);font-weight:500;min-width:115px;text-align:right}
+.wf-bar-wrap{width:90px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.wf-bar{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* TAX */
+.tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.tax-block{background:var(--surface2);border-radius:10px;padding:.9rem}
+.tax-title{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:.65rem;font-weight:600}
+.tax-line{display:flex;justify-content:space-between;font-size:.76rem;padding:.28rem 0;border-bottom:1px solid var(--border)}
+.tax-line:last-child{border-bottom:none}
+.tax-line .name{color:var(--muted)}.tax-line .val{font-weight:500}
+
+/* ALERTS */
+.alert{padding:.8rem .9rem;border-radius:8px;font-size:.76rem;line-height:1.5;display:flex;gap:.65rem;align-items:flex-start}
+.alert.warning{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);color:var(--orange)}
+.alert.info{background:rgba(124,111,205,.1);border:1px solid rgba(124,111,205,.25);color:var(--accent2)}
+.alert.success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:var(--green)}
+
+/* BTN */
+.btn{padding:.6rem 1.1rem;border-radius:8px;font-family:var(--fm);font-size:.75rem;font-weight:500;letter-spacing:.5px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s}
+.btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.btn.primary:hover{background:#9b90e0;border-color:#9b90e0}
+
+/* SECTION */
+.section-head{font-family:var(--fh);font-size:1.05rem;font-weight:700;margin-bottom:.9rem;display:flex;align-items:center;gap:.7rem;color:var(--text)}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+
+/* PROFIT BAR */
+.profit-bar-container{margin-top:.65rem;background:var(--surface2);border-radius:8px;height:10px;overflow:hidden}
+.profit-bar{height:100%;background:linear-gradient(90deg,var(--green),#22d3ee);border-radius:8px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:.65rem;position:relative;padding-left:1.4rem}
+.timeline::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--border)}
+.tl-item{position:relative}
+.tl-item::before{content:'';position:absolute;left:-1.4rem;top:7px;width:7px;height:7px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg)}
+.tl-title{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.15rem}
+.tl-desc{font-size:.7rem;color:var(--muted)}
+
+/* TAB CONTENT */
+.tab-content{display:none}.tab-content.active{display:flex;flex-direction:column;gap:.9rem}
+
+/* EURIBOR BADGE */
+.euribor-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(124,111,205,.15);border:1px solid rgba(124,111,205,.3);border-radius:20px;padding:.2rem .65rem;font-size:.68rem;color:var(--accent2);margin-bottom:.5rem}
+
+/* SENSIBILITE TABLE */
+.sensi-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.sensi-table th{background:var(--surface2);padding:.5rem .75rem;text-align:center;font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);border:1px solid var(--border)}
+.sensi-table td{padding:.5rem .75rem;text-align:center;border:1px solid var(--border)}
+.sensi-table tr.base td{background:rgba(124,111,205,.1);font-weight:600}
+.sensi-table .pos{color:var(--green)}.sensi-table .neg{color:var(--red)}.sensi-table .warn{color:var(--orange)}
+
+/* TIRAGE CHART */
+.tirage-grid{display:flex;gap:3px;align-items:flex-end;height:60px;margin-top:.5rem}
+.tirage-bar{flex:1;border-radius:3px 3px 0 0;transition:height .4s;min-height:2px}
+
+/* SCROLL */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+@media(max-width:1100px){.metrics-grid{grid-template-columns:repeat(2,1fr)}.section-grid{grid-template-columns:1fr}.tax-grid{grid-template-columns:1fr}}
+
+/* ===== PDF STYLES ===== */
+#pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+#pdf-overlay.open{display:flex}
+#pdf-container{background:#fff;width:215mm;max-height:92vh;overflow-y:auto;border-radius:4px;box-shadow:0 40px 80px rgba(0,0,0,.5);position:relative}
+.pdf-toolbar{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:.65rem 1.1rem;display:flex;align-items:center;justify-content:space-between;z-index:10;flex-wrap:wrap;gap:.5rem;border-radius:4px 4px 0 0}
+.pdf-toolbar-title{font-family:var(--fh);font-size:.82rem;color:var(--accent);font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+#pdf-doc{font-family:'Georgia',serif;color:#1a1a2e;padding:13mm 13mm 16mm 13mm;font-size:9pt;line-height:1.5}
+.pdf-cover{text-align:center;padding:10mm 0 7mm 0;border-bottom:3px solid #1a1a2e;margin-bottom:7mm}
+.pdf-cover-pre{font-size:6.5pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:2.5mm;font-family:'Arial Narrow',Arial,sans-serif}
+.pdf-cover h1{font-size:19pt;font-weight:700;color:#0d0d2b;margin:2mm 0;letter-spacing:-.5px}
+.pdf-cover-sub{font-size:9.5pt;color:#444;margin-top:2mm}
+.pdf-cover-meta{display:flex;justify-content:center;gap:7mm;margin-top:4mm;font-size:7pt;color:#888;font-family:'Arial Narrow',Arial,sans-serif;letter-spacing:.5px;text-transform:uppercase}
+.pdf-section{margin-bottom:6mm}
+.pdf-section-title{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#0d0d2b;border-bottom:1px solid #0d0d2b;padding-bottom:1.5mm;margin-bottom:3.5mm;font-family:'Arial Narrow',Arial,sans-serif}
+.pdf-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;margin-bottom:4mm}
+.pdf-kpi{border:1px solid #ddd;border-radius:3px;padding:2.5mm;background:#f8f9ff}
+.pdf-kpi-label{font-size:6pt;text-transform:uppercase;letter-spacing:1px;color:#888;font-family:'Arial Narrow',Arial,sans-serif;margin-bottom:.8mm}
+.pdf-kpi-val{font-size:12.5pt;font-weight:700;color:#0d0d2b;line-height:1}
+.pdf-kpi-val.pos{color:#166534}.pdf-kpi-val.neg{color:#991b1b}.pdf-kpi-val.warn{color:#92400e}
+.pdf-kpi-sub{font-size:5.5pt;color:#aaa;margin-top:.4mm}
+.pdf-table{width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:2.5mm}
+.pdf-table th{background:#0d0d2b;color:#fff;padding:1.8mm 2.5mm;text-align:left;font-size:6.5pt;text-transform:uppercase;letter-spacing:.8px;font-family:'Arial Narrow',Arial,sans-serif;font-weight:600}
+.pdf-table td{padding:1.6mm 2.5mm;border-bottom:1px solid #eee;vertical-align:top}
+.pdf-table tr:nth-child(even) td{background:#f9f9f9}
+.pdf-table tr.total td{background:#f0f0f8;font-weight:700;border-top:1.5px solid #0d0d2b}
+.pdf-table tr.sub td:first-child{padding-left:7mm;color:#555}
+.pdf-table .right{text-align:right;font-family:'Courier New',monospace;font-size:7.5pt}
+.pdf-table .pos-val{color:#166534;font-weight:600}.pdf-table .neg-val{color:#991b1b;font-weight:600}.pdf-table .warn-val{color:#92400e;font-weight:600}
+.pdf-two-col{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+.pdf-infobox{border:1px solid #e0e0e0;border-radius:3px;padding:2.5mm 3.5mm;background:#fafafa}
+.pdf-infobox-title{font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#333;margin-bottom:1.8mm;font-family:'Arial Narrow',Arial,sans-serif}
+.pdf-infobox-row{display:flex;justify-content:space-between;font-size:7pt;padding:.7mm 0;border-bottom:1px solid #eee}
+.pdf-infobox-row:last-child{border-bottom:none}
+.pdf-infobox-row .k{color:#555}.pdf-infobox-row .v{font-weight:600;font-family:'Courier New',monospace;font-size:7pt}
+.pdf-infobox-row .v.g{color:#166534}.pdf-infobox-row .v.r{color:#991b1b}
+.pdf-alert{padding:2mm 3.5mm;border-radius:3px;font-size:7pt;margin-bottom:2.5mm;line-height:1.4}
+.pdf-alert.info{background:#eff6ff;border-left:3px solid #3b82f6;color:#1e3a8a}
+.pdf-alert.warn{background:#fff7ed;border-left:3px solid #f97316;color:#7c2d12}
+.pdf-alert.ok{background:#f0fdf4;border-left:3px solid #22c55e;color:#14532d}
+.pdf-highlight-bar{background:#0d0d2b;color:#fff;padding:2.5mm 3.5mm;border-radius:3px;display:flex;justify-content:space-between;align-items:center;margin-bottom:3.5mm}
+.pdf-highlight-bar .label{font-size:7.5pt;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;letter-spacing:1px}
+.pdf-highlight-bar .val{font-size:13.5pt;font-weight:700}
+.pdf-highlight-bar .val.pos{color:#86efac}.pdf-highlight-bar .val.neg{color:#fca5a5}
+.pdf-footer{margin-top:7mm;padding-top:3.5mm;border-top:1px solid #ccc;font-size:6pt;color:#aaa;display:flex;justify-content:space-between;font-family:'Arial Narrow',Arial,sans-serif}
+.pdf-signature-block{margin-top:7mm;display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+.pdf-sig{border-top:1px solid #999;padding-top:2mm;font-size:6.5pt;color:#888;font-family:'Arial Narrow',Arial,sans-serif}
+.pdf-page-break{page-break-before:always}
+
+/* CREDIT SUMMARY BOX */
+.credit-summary-box{margin-top:.5rem;padding:.7rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:.73rem;display:flex;flex-direction:column;gap:.3rem}
+.csb-row{display:flex;justify-content:space-between;align-items:center}
+.csb-row .k{color:var(--muted)}.csb-row .v{font-weight:600;font-family:var(--fm)}
+.csb-row .v.g{color:var(--green)}.csb-row .v.r{color:var(--red)}.csb-row .v.a{color:var(--accent)}
+
+@media print{
+  body>*{display:none!important}
+  #pdf-print-target{display:block!important;position:static!important}
+  @page{size:A4;margin:0}
+}
+#pdf-print-target{display:none;position:fixed;inset:0;background:#fff;z-index:99999}
+
+/* ===== PAYWALL SYSTEM ===== */
+.pro-locked{position:relative}
+.pro-locked .pro-blur{filter:blur(5px) brightness(.4);pointer-events:none;user-select:none}
+.pro-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:50;text-align:center;padding:2rem}
+.pro-gate-icon{font-size:2rem}
+.pro-gate-title{font-family:var(--fh);font-size:1.05rem;font-weight:700;color:var(--accent)}
+.pro-gate-sub{font-size:.78rem;color:var(--muted);max-width:320px;line-height:1.5}
+.pro-gate-btn{background:var(--accent2);color:#fff;border:none;padding:.65rem 1.5rem;border-radius:8px;font-family:var(--fh);font-size:.85rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
+.pro-gate-btn:hover{background:#9b90e0;transform:translateY(-1px)}
+
+/* PRO BANNER */
+.pro-banner{background:linear-gradient(135deg,rgba(124,111,205,.15),rgba(232,213,160,.08));border:1px solid rgba(124,111,205,.3);border-radius:10px;padding:.8rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;font-size:.78rem;margin-bottom:.5rem}
+.pro-banner-text{color:var(--muted)}
+.pro-banner-text strong{color:var(--accent);display:block;font-size:.88rem;margin-bottom:.15rem}
+.pro-banner-btn{background:var(--accent2);color:#fff;border:none;padding:.4rem 1rem;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--fm);text-decoration:none;transition:background .2s}
+.pro-banner-btn:hover{background:#9b90e0}
+
+/* PRO BADGE in header */
+.pro-status-badge{padding:.25rem .75rem;border-radius:20px;font-size:.65rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.pro-status-badge.free{background:rgba(107,107,138,.15);color:var(--muted);border:1px solid var(--border)}
+.pro-status-badge.active{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+
+/* SAVE PANEL */
+.save-panel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.5rem}
+.save-list{display:flex;flex-direction:column;gap:.4rem;max-height:220px;overflow-y:auto;margin-top:.75rem}
+.save-item{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.5rem .75rem;display:flex;align-items:center;justify-content:space-between;font-size:.73rem;cursor:pointer;transition:border-color .2s}
+.save-item:hover{border-color:var(--accent2)}
+.save-item-name{color:var(--text);font-weight:500}
+.save-item-meta{color:var(--muted);font-size:.65rem}
+.save-item-del{color:var(--muted);cursor:pointer;padding:.1rem .3rem;border-radius:4px;border:none;background:none;font-size:.8rem}
+.save-item-del:hover{color:var(--red);background:rgba(248,113,113,.1)}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MDB<span>·</span>PRO</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchSection('simulation')">Simulation</button>
+    <button class="nav-tab" onclick="switchSection('financement')">Financement</button>
+    <button class="nav-tab" onclick="switchSection('fiscalite')">Fiscalité</button>
+    <button class="nav-tab" onclick="switchSection('planning')">Planning</button>
+    <button class="nav-tab" onclick="switchSection('docs')">Réglementation</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:.65rem">
+    <span style="font-size:.68rem;color:var(--muted)">2024 · Droit FR</span>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <a href="/" style="font-size:.68rem;color:var(--muted);text-decoration:none;padding:.35rem .7rem;border:1px solid var(--border);border-radius:6px;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">← Accueil</a>
+      <span class="pro-status-badge free" id="pro-status-badge">Gratuit</span>
+      <button id="save-btn" onclick="saveSimulation()" style="display:none;align-items:center;gap:.4rem;font-size:.7rem;padding:.42rem .9rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);font-family:var(--fm)">
+        💾 Sauvegarder
+      </button>
+      <button id="pdf-btn" onclick="openPdf()" class="btn primary" style="display:flex;align-items:center;gap:.4rem;font-size:.7rem;padding:.42rem .9rem">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Dossier Banque
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+<!-- ============ SIDEBAR ============ -->
+<div class="sidebar">
+
+  <!-- TYPE -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Type d'opération</div>
+    <div class="toggle-group">
+      <div class="toggle-opt active" id="t-hab" onclick="setType('hab')">Habitation</div>
+      <div class="toggle-opt" id="t-com" onclick="setType('com')">Commercial</div>
+      <div class="toggle-opt" id="t-terr" onclick="setType('terr')">Terrain</div>
+    </div>
+    <div class="toggle-group">
+      <div class="toggle-opt active" id="s-ancien" onclick="setStatut('ancien')">Ancien</div>
+      <div class="toggle-opt" id="s-neuf" onclick="setStatut('neuf')">VEFA/Neuf</div>
+      <div class="toggle-opt" id="s-vente" onclick="setStatut('vente')">Vente SCI</div>
+    </div>
+    <div class="field">
+      <label>Régime TVA</label>
+      <select id="regime-tva" onchange="calc()">
+        <option value="exo">Exonéré (ancien sans travaux)</option>
+        <option value="marge">TVA sur marge (ancien rénovation)</option>
+        <option value="plein">TVA sur prix total (neuf)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Structure juridique</label>
+      <select id="structure" onchange="calc()">
+        <option value="sas">SAS / SARL IS</option>
+        <option value="eirl">EI / EURL IR</option>
+        <option value="sci">SCI IS</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ACQUISITION -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Acquisition</div>
+    <div class="field">
+      <label>Prix d'achat HT (€)</label>
+      <input type="number" id="prix-achat" value="280000" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>DMTO MDB (%)</label>
+      <div class="range-row">
+        <input type="range" id="droits-mut" min="0" max="7" step="0.001" value="0.715" oninput="syncDMTO();calc()">
+        <span class="range-val" id="droits-mut-val">0.715%</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Honoraires notaire (€)</label>
+      <input type="number" id="frais-notaire" value="1500" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Frais agence achat (€)</label>
+      <input type="number" id="frais-agence-achat" value="0" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Surface (m²)</label>
+      <input type="number" id="surface" value="120" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- FINANCEMENT -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Financement</div>
+
+    <div class="toggle-group">
+      <div class="toggle-opt active" id="mode-infine" onclick="setFinMode('infine')">In fine (MDB)</div>
+      <div class="toggle-opt" id="mode-amort" onclick="setFinMode('amort')">Amortissable</div>
+    </div>
+
+    <div class="field">
+      <label>Apport personnel (€)</label>
+      <input type="number" id="apport" value="80000" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Plafond ligne de crédit (€)</label>
+      <input type="number" id="emprunt" value="280000" oninput="calc()">
+    </div>
+
+    <!-- IN FINE -->
+    <div id="block-infine">
+      <div class="field">
+        <label>Euribor 3M actuel (%)</label>
+        <div class="range-row">
+          <input type="number" id="euribor" value="3.47" step="0.01" oninput="calc()" style="flex:1">
+          <span class="euribor-badge" style="margin:0">3M</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Spread bancaire (bps) <span style="font-size:.63rem;color:var(--muted)">150–300 typ.</span></label>
+        <div class="range-row">
+          <input type="range" id="spread-bps" min="50" max="450" step="10" value="200" oninput="syncSpread();calc()">
+          <span class="range-val" id="spread-val">+200 bps</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.55rem .8rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Taux all-in</span>
+        <span style="font-family:var(--fh);font-size:1.15rem;font-weight:800;color:var(--accent)" id="taux-allin">—</span>
+      </div>
+      <div class="field">
+        <label>Profil de tirage</label>
+        <select id="tirage-profil" onchange="calc()">
+          <option value="achat">Achat puis appels travaux ×3</option>
+          <option value="lineaire">Progressif mensuel</option>
+          <option value="total">Tirage total dès achat</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Commission non-utilisation (% / an)</label>
+        <input type="number" id="commission-nu" value="0.50" step="0.1" oninput="calc()">
+      </div>
+    </div>
+
+    <!-- AMORTISSABLE -->
+    <div id="block-amort" style="display:none">
+      <div class="field">
+        <label>Taux fixe (% / an)</label>
+        <input type="number" id="taux-amort" value="4.60" step="0.1" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Durée amortissement (mois)</label>
+        <input type="number" id="duree-amort" value="18" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Assurance emprunteur (% / an)</label>
+        <input type="number" id="taux-assur" value="0.30" step="0.05" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Frais de mise en place (€)</label>
+      <input type="number" id="frais-dossier" value="3500" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Garantie hypothécaire (€)</label>
+      <input type="number" id="garantie" value="4000" oninput="calc()">
+    </div>
+
+    <!-- CREDIT SUMMARY -->
+    <div class="credit-summary-box" id="credit-summary"></div>
+  </div>
+
+  <!-- TRAVAUX -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Travaux & Rénovation</div>
+    <div class="field">
+      <label>Coût travaux HT (€)</label>
+      <input type="number" id="travaux-ht" value="85000" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>TVA travaux</label>
+      <select id="tva-travaux" onchange="calc()">
+        <option value="10">10% (rénovation ancienne)</option>
+        <option value="5.5">5,5% (réno énergétique)</option>
+        <option value="20">20% (construction neuve)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Imprévus (%)</label>
+      <div class="range-row">
+        <input type="range" id="contingence" min="0" max="30" step="1" value="10" oninput="syncPct('contingence','contingence-val');calc()">
+        <span class="range-val" id="contingence-val">10%</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>MOE (% travaux)</label>
+      <div class="range-row">
+        <input type="range" id="moe" min="0" max="15" step="0.5" value="5" oninput="syncPct1('moe','moe-val');calc()">
+        <span class="range-val" id="moe-val">5%</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Diagnostics (€)</label>
+      <input type="number" id="diagnostics" value="1200" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- PORTAGE -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Frais de portage</div>
+    <div class="field">
+      <label>Durée portage (mois)</label>
+      <input type="number" id="duree-portage" value="18" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Taxe foncière (€ / an)</label>
+      <input type="number" id="taxe-fonciere" value="3200" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Assurance PNO (€ / an)</label>
+      <input type="number" id="assurance-pno" value="600" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Charges copro (€ / mois)</label>
+      <input type="number" id="charges-copro" value="0" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Frais gestion opération (€)</label>
+      <input type="number" id="frais-gestion" value="4000" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- VENTE -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Vente</div>
+    <div class="field">
+      <label>Prix de vente cible (€)</label>
+      <input type="number" id="prix-vente" value="480000" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>Honoraires agence vente (%)</label>
+      <div class="range-row">
+        <input type="range" id="hono-vente" min="0" max="6" step="0.1" value="3" oninput="syncPct1('hono-vente','hono-vente-val');calc()">
+        <span class="range-val" id="hono-vente-val">3.0%</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Frais notaire vendeur (€)</label>
+      <input type="number" id="frais-notaire-vente" value="800" oninput="calc()">
+    </div>
+  </div>
+
+
+  <!-- SAVE PANEL -->
+  <div id="save-panel-wrap">
+    <div class="save-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.1rem">
+        <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Simulations sauvegardées</div>
+        <span style="font-size:.65rem;color:var(--muted)" id="saves-count"></span>
+      </div>
+      <div class="save-list" id="saves-list"></div>
+    </div>
+  </div>
+
+</div><!-- /sidebar -->
+
+<!-- ============ MAIN ============ -->
+<div class="main">
+
+  <!-- SIMULATION TAB -->
+  <div id="tab-simulation" class="tab-content active">
+    <div class="metrics-grid">
+      <div class="metric"><div class="metric-label">Bénéfice net (après IS)</div><div class="metric-value positive" id="m-benefice">—</div><div class="metric-sub" id="m-benefice-pct">—</div></div>
+      <div class="metric orange"><div class="metric-label">IS total estimé</div><div class="metric-value warning" id="m-is">—</div><div class="metric-sub" id="m-is-rate">—</div></div>
+      <div class="metric green"><div class="metric-label">ROI sur apport</div><div class="metric-value positive" id="m-roi">—</div><div class="metric-sub" id="m-roi-annuel">—</div></div>
+      <div class="metric"><div class="metric-label">Coût de revient</div><div class="metric-value neutral" id="m-revient">—</div><div class="metric-sub" id="m-revient-m2">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Marge brute</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <span style="font-size:.8rem;color:var(--muted)">Avant impôts</span>
+        <span style="font-family:var(--fh);font-size:1.15rem;font-weight:700;color:var(--accent)" id="m-marge-brute">—</span>
+      </div>
+      <div class="profit-bar-container"><div class="profit-bar" id="profit-bar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:.4rem;font-size:.68rem;color:var(--muted)"><span>0%</span><span id="profit-bar-pct">—</span><span>30%</span></div>
+    </div>
+
+    <div class="section-grid">
+      <div class="card"><div class="card-title"><span class="dot"></span>Décomposition coûts</div><div class="waterfall" id="waterfall-costs"></div></div>
+      <div class="card"><div class="card-title"><span class="dot"></span>Analyse TVA</div><div id="tva-analysis"></div></div>
+    </div>
+    <div class="card"><div class="card-title"><span class="dot"></span>Flux financement</div><div class="waterfall" id="waterfall-finance"></div></div>
+  </div>
+
+
+  <!-- FINANCEMENT TAB -->
+  <div id="tab-financement" class="tab-content">
+    <!-- FREE users see this locked overlay -->
+    <div id="financement-locked" class="locked-block" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:3rem;gap:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;border-style:dashed">
+      <div style="font-size:3rem">📊</div>
+      <div style="font-family:var(--fh);font-size:1.2rem;font-weight:700;color:var(--accent)">Analyse de financement avancée</div>
+      <p style="font-size:.82rem;color:var(--muted);max-width:380px;line-height:1.6">Tableau de tirage mensuel Euribor, sensibilité ±1%, comparatif in fine vs amortissable — réservés à la version Pro.</p>
+      <a href="/" class="pro-gate-btn">Passer Pro — 49€/mois →</a>
+      <div style="font-size:.68rem;color:var(--muted)">Sans engagement · Résiliable à tout moment</div>
+    </div>
+    <!-- PRO users see this -->
+    <div id="financement-pro" class="pro-block" style="display:none">
+    <div class="section-head">Ligne de crédit MDB — Euribor in fine</div>
+
+    <div class="metrics-grid">
+      <div class="metric"><div class="metric-label">Coût total intérêts</div><div class="metric-value negative" id="fin-interets-total">—</div><div class="metric-sub" id="fin-interets-sub">—</div></div>
+      <div class="metric orange"><div class="metric-label">Intérêts / marge brute</div><div class="metric-value warning" id="fin-ratio-couverture">—</div><div class="metric-sub">Ratio de couverture MDB</div></div>
+      <div class="metric green"><div class="metric-label">Économie vs amortissable</div><div class="metric-value positive" id="fin-eco-amort">—</div><div class="metric-sub" id="fin-eco-sub">—</div></div>
+      <div class="metric"><div class="metric-label">Capital non tiré moy.</div><div class="metric-value neutral" id="fin-non-tire">—</div><div class="metric-sub">Commission non-util. = <span id="fin-cnu">—</span></div></div>
+    </div>
+
+    <!-- TABLEAU TIRAGES MENSUEL -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Tableau de tirage mensuel & intérêts</div>
+      <div id="tirage-tableau" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- SENSIBILITÉ EURIBOR -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Analyse de sensibilité Euribor (±1%)</div>
+      <div id="sensi-table-wrap"></div>
+    </div>
+
+    <!-- COMPARATIF INFINE VS AMORT -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Comparatif in fine vs amortissable</div>
+      <div id="comparatif-table"></div>
+    </div>
+  </div>
+
+    </div><!-- /financement-pro -->
+  </div><!-- /tab-financement -->
+
+  <!-- FISCALITE TAB -->
+  <div id="tab-fiscalite" class="tab-content">
+    <div class="section-head">Fiscalité IS — Art. 219 CGI</div>
+    <div class="metrics-grid">
+      <div class="metric"><div class="metric-label">Résultat fiscal</div><div class="metric-value neutral" id="f-resultat">—</div></div>
+      <div class="metric orange"><div class="metric-label">IS taux réduit (15%)</div><div class="metric-value warning" id="f-is-reduit">—</div><div class="metric-sub">Jusqu'à 42 500 €</div></div>
+      <div class="metric orange"><div class="metric-label">IS taux normal (25%)</div><div class="metric-value warning" id="f-is-normal">—</div><div class="metric-sub">Au-delà de 42 500 €</div></div>
+      <div class="metric red"><div class="metric-label">Charge fiscale totale</div><div class="metric-value negative" id="f-is-total">—</div></div>
+    </div>
+    <div class="tax-grid">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>IS détaillé</div>
+        <div class="tax-block">
+          <div class="tax-title">Base d'imposition</div>
+          <div class="tax-line"><span class="name">Prix de vente (base IS)</span><span class="val" id="t-pv">—</span></div>
+          <div class="tax-line"><span class="name">— Acquisition + travaux</span><span class="val" id="t-cr">—</span></div>
+          <div class="tax-line"><span class="name">— Charges financières</span><span class="val" id="t-cf">—</span></div>
+          <div class="tax-line"><span class="name">— Portage + vente</span><span class="val" id="t-fp">—</span></div>
+          <div class="tax-line" style="border-top:1px solid var(--accent2);padding-top:.35rem;color:var(--accent)"><span class="name"><strong>= Bénéfice imposable</strong></span><span class="val" id="t-bi">—</span></div>
+        </div>
+        <div class="tax-block" style="margin-top:.6rem">
+          <div class="tax-title">Calcul IS 2024</div>
+          <div class="tax-line"><span class="name">15% (≤ 42 500 €)</span><span class="val" id="t-tr15">—</span></div>
+          <div class="tax-line"><span class="name">25% (> 42 500 €)</span><span class="val" id="t-tr25">—</span></div>
+          <div class="tax-line" style="color:var(--red)"><span class="name"><strong>IS total</strong></span><span class="val" id="t-istot">—</span></div>
+          <div class="tax-line"><span class="name">Taux effectif</span><span class="val" id="t-teff">—</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>TVA & DMTO</div>
+        <div class="tax-block">
+          <div class="tax-title">DMTO Marchands de biens</div>
+          <div class="tax-line"><span class="name">Taux MDB (art. 1115 CGI)</span><span class="val" id="t-dmto-rate">—</span></div>
+          <div class="tax-line"><span class="name">Économie vs particulier</span><span class="val" id="t-eco-dmto" style="color:var(--green)">—</span></div>
+        </div>
+        <div class="tax-block" style="margin-top:.6rem">
+          <div class="tax-title">Régime TVA</div>
+          <div id="tva-regime-detail"></div>
+        </div>
+        <div class="alert info" style="margin-top:.6rem"><span>ℹ️</span><span>Engagement de revente ≤ 5 ans obligatoire. Dépassement = rappel DMTO standard (5,8%) + pénalités.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Leviers d'optimisation fiscale</div>
+      <div class="section-grid">
+        <div>
+          <div style="margin-bottom:.65rem;font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Intérêts in fine déductibles :</strong> L'intégralité des intérêts de la ligne de crédit est déductible du résultat IS, ce qui réduit directement la base imposable.</div>
+          <div style="margin-bottom:.65rem;font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Ventilation terrain/construction :</strong> TVA sur marge uniquement sur la construction. Optimisation de la ventilation = réduction base TVA.</div>
+          <div style="font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Commission non-utilisation :</strong> Charge déductible IS. À optimiser via un profil de tirage serré.</div>
+        </div>
+        <div>
+          <div style="margin-bottom:.65rem;font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Déficit reportable :</strong> Perte = déficit IS reportable sans limite sur exercices futurs (art. 209 CGI). Intérêt pour opérations en perte temporaire.</div>
+          <div style="margin-bottom:.65rem;font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Intégration fiscale :</strong> Groupe ≥95% du capital → compensation bénéfices/déficits entre sociétés. Levier clé si portfolio multi-opérations.</div>
+          <div style="font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--text)">Frais de dossier :</strong> Frais de mise en place de la ligne déductibles l'année d'engagement (pas d'étalement obligatoire en MDB).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANNING TAB -->
+  <div id="tab-planning" class="tab-content">
+    <div class="section-head">Planning opérationnel</div>
+    <div class="section-grid">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Chronologie type</div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-title">M0 — Signature compromis</div><div class="tl-desc">Vérification titre, diagnostics préalables. Dépôt séquestre 5–10%. Conditions suspensives.</div></div>
+          <div class="tl-item"><div class="tl-title">M1–2 — Acte authentique</div><div class="tl-desc">Paiement DMTO 0,715% + frais notariaux. Prise de possession. Déblocage 1er tirage ligne.</div></div>
+          <div class="tl-item"><div class="tl-title">M2–3 — Démarrage chantier</div><div class="tl-desc">DOC/DAACT. 1er appel de fonds 35% → 2e tirage ligne. Coordination MOE.</div></div>
+          <div class="tl-item"><div class="tl-title" id="tl-travaux">M10–14 — Réception travaux</div><div class="tl-desc">PV de réception, levée réserves. DPE post-travaux. Certificat conformité.</div></div>
+          <div class="tl-item"><div class="tl-title" id="tl-commer">M14–16 — Commercialisation</div><div class="tl-desc">Photos pro, home staging, annonces. Ajustement prix marché.</div></div>
+          <div class="tl-item"><div class="tl-title" id="tl-compro">M16–18 — Compromis vente</div><div class="tl-desc">Instruction prêt acquéreur. Délai préemption mairie. Situation locative vérifiée.</div></div>
+          <div class="tl-item"><div class="tl-title" id="tl-vente">M18 — Acte vente</div><div class="tl-desc">Encaissement. Remboursement ligne in fine. Calcul résultat fiscal.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Risques & alertes</div>
+        <div style="display:flex;flex-direction:column;gap:.65rem">
+          <div class="alert warning"><span>⚠️</span><div><strong>Délai 5 ans art. 1115 CGI</strong><br>Non-respect = rappel DMTO 5,8% + intérêts 0,2%/mois. Date limite absolue.</div></div>
+          <div class="alert warning"><span>⚠️</span><div><strong>Variation Euribor</strong><br>Ligne in fine = taux variable. Hausse de 1% sur 18 mois = coût supplémentaire significatif. Vérifier la sensibilité ci-dessus.</div></div>
+          <div class="alert info"><span>ℹ️</span><div><strong>TVA sur marge : conditions strictes</strong><br>Achat sans déduction TVA obligatoire. Identité fiscale du bien à préserver.</div></div>
+          <div class="alert success"><span>✓</span><div><strong>Dommages-ouvrage obligatoire</strong><br>MDB réputé constructeur pour travaux structurels. Souscription DO avant ouverture chantier.</div></div>
+          <div class="alert warning"><span>⚠️</span><div><strong>Locataire en place</strong><br>Bien occupé = délai +6 à 24 mois. Analyser situation locative avant compromis.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title"><span class="dot"></span>Flux de trésorerie mensuel simulé</div><div id="cashflow-table" style="overflow-x:auto"></div></div>
+  </div>
+
+  <!-- DOCS TAB -->
+  <div id="tab-docs" class="tab-content">
+    <div class="section-head">Réglementation & Référentiel juridique</div>
+    <div class="section-grid">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>DMTO Marchands de Biens</div>
+        <div class="tax-block"><div class="tax-title">Art. 1115 CGI — Engagement revente</div>
+          <div class="tax-line"><span class="name">Droit départemental</span><span class="val">0,60%</span></div>
+          <div class="tax-line"><span class="name">Taxe communale</span><span class="val">0,115%</span></div>
+          <div class="tax-line"><span class="name">Total MDB</span><span class="val" style="color:var(--green)">0,715%</span></div>
+          <div class="tax-line"><span class="name">vs standard</span><span class="val" style="color:var(--red)">5,80665%</span></div>
+          <div class="tax-line"><span class="name">Délai revente max</span><span class="val">5 ans</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>TVA Immobilière</div>
+        <div class="tax-block"><div class="tax-title">Art. 257-I CGI</div>
+          <div class="tax-line"><span class="name">Immeuble neuf (< 5 ans)</span><span class="val">TVA 20% prix total</span></div>
+          <div class="tax-line"><span class="name">Ancien acheté avec TVA</span><span class="val">TVA 20% sur marge</span></div>
+          <div class="tax-line"><span class="name">Ancien acheté sans TVA</span><span class="val">Exonéré (option)</span></div>
+        </div>
+        <div class="tax-block" style="margin-top:.6rem"><div class="tax-title">TVA Travaux</div>
+          <div class="tax-line"><span class="name">Réno énergétique</span><span class="val">5,5%</span></div>
+          <div class="tax-line"><span class="name">Entretien / amélioration</span><span class="val">10%</span></div>
+          <div class="tax-line"><span class="name">Construction / extension</span><span class="val">20%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>IS — Art. 219 CGI 2024</div>
+        <div class="tax-block"><div class="tax-title">Taux d'imposition</div>
+          <div class="tax-line"><span class="name">Taux réduit PME (CA < 10M€)</span><span class="val">15% ≤ 42 500 €</span></div>
+          <div class="tax-line"><span class="name">Taux normal</span><span class="val">25% au-delà</span></div>
+          <div class="tax-line"><span class="name">Contribution sociale IS</span><span class="val">3,3% (CA > 763k€)</span></div>
+        </div>
+        <div class="tax-block" style="margin-top:.6rem"><div class="tax-title">Charges déductibles</div>
+          <div class="tax-line"><span class="name">Intérêts ligne de crédit</span><span class="val">✓ 100%</span></div>
+          <div class="tax-line"><span class="name">Commission non-utilisation</span><span class="val">✓ 100%</span></div>
+          <div class="tax-line"><span class="name">Frais de dossier + garantie</span><span class="val">✓ 100%</span></div>
+          <div class="tax-line"><span class="name">Honoraires, portage, rémunération</span><span class="val">✓ 100%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Ligne de crédit MDB — Pratique bancaire</div>
+        <div class="tax-block"><div class="tax-title">Caractéristiques standards</div>
+          <div class="tax-line"><span class="name">Nature</span><span class="val">Crédit in fine / revolving</span></div>
+          <div class="tax-line"><span class="name">Index de référence</span><span class="val">Euribor 3M ou 6M</span></div>
+          <div class="tax-line"><span class="name">Spread bancaire typique</span><span class="val">150–300 bps</span></div>
+          <div class="tax-line"><span class="name">Durée max usuelle</span><span class="val">12–24 mois</span></div>
+          <div class="tax-line"><span class="name">Remboursement capital</span><span class="val">In fine (à la vente)</span></div>
+          <div class="tax-line"><span class="name">Commission non-utilisation</span><span class="val">0,25%–0,75% / an</span></div>
+          <div class="tax-line"><span class="name">Garantie</span><span class="val">Hypothèque 1er rang</span></div>
+          <div class="tax-line"><span class="name">LTV max usuel</span><span class="val">75–80% (achat+travaux)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay" onclick="closePdfOutside(event)">
+  <div id="pdf-container">
+    <div class="pdf-toolbar">
+      <span class="pdf-toolbar-title">📄 Dossier de financement — Aperçu</span>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="pdf-op-name" placeholder="Nom de l'opération" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;color:var(--text);font-family:var(--fm);font-size:.73rem;width:195px;outline:none">
+        <input type="text" id="pdf-company" placeholder="Société (ex: CASANO GESTION SAS)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;color:var(--text);font-family:var(--fm);font-size:.73rem;width:200px;outline:none">
+        <button class="btn primary" onclick="doPrint()" style="font-size:.7rem;padding:.38rem .85rem;white-space:nowrap">🖨 Imprimer</button>
+        <button class="btn" onclick="closePdf()" style="font-size:.72rem;padding:.38rem .65rem">✕</button>
+      </div>
+    </div>
+    <div id="pdf-doc"></div>
+  </div>
+</div>
+<div id="pdf-print-target"><div id="pdf-doc-print"></div></div>
+
+<script>
+// ===== HELPERS =====
+const fmt=(n,d=0)=>isNaN(n)?'—':new Intl.NumberFormat('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n)+' €';
+const fp=(n,d=1)=>isNaN(n)?'—':n.toFixed(d)+' %';
+const v=id=>parseFloat(document.getElementById(id)?.value)||0;
+const el=id=>document.getElementById(id);
+
+let currentType='hab', currentStatut='ancien', finMode='infine';
+
+function setType(t){currentType=t;['hab','com','terr'].forEach(x=>el('t-'+x)?.classList.remove('active'));el('t-'+t)?.classList.add('active');calc()}
+function setStatut(s){currentStatut=s;['ancien','neuf','vente'].forEach(x=>el('s-'+x)?.classList.remove('active'));el('s-'+s)?.classList.add('active');calc()}
+
+function setFinMode(m){
+  finMode=m;
+  el('mode-infine').classList.toggle('active',m==='infine');
+  el('mode-amort').classList.toggle('active',m==='amort');
+  el('block-infine').style.display=m==='infine'?'block':'none';
+  el('block-amort').style.display=m==='amort'?'block':'none';
+  calc();
+}
+
+function syncDMTO(){const v2=parseFloat(el('droits-mut').value);el('droits-mut-val').textContent=v2.toFixed(3)+'%';}
+function syncSpread(){el('spread-val').textContent='+'+(v('spread-bps'))+'bps';updateAllin();}
+function syncPct(id,vi){el(vi).textContent=v(id)+'%';}
+function syncPct1(id,vi){el(vi).textContent=v(id).toFixed(1)+'%';}
+function updateAllin(){
+  const euribor=v('euribor');const spread=v('spread-bps')/100;
+  const allin=euribor+spread;
+  if(el('taux-allin')) el('taux-allin').textContent=fp(allin,2);
+  return allin;
+}
+
+function switchSection(s){
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>{
+    const names=['simulation','financement','fiscalite','planning','docs'];
+    t.classList.toggle('active',names[i]===s);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  el('tab-'+s)?.classList.add('active');
+}
+
+function wfRow(label,amount,color='var(--muted)',sub=false,total=false,barPct=0,barColor='var(--red)'){
+  const cls=[sub?'sub':'',total?'total':''].filter(Boolean).join(' ');
+  const bar=barPct>0?`<div class="wf-bar-wrap"><div class="wf-bar" style="width:${Math.min(barPct,100)}%;background:${barColor}"></div></div>`:'<div style="width:90px"></div>';
+  return `<div class="wf-row ${cls}"><div class="wf-label" style="color:${color}">${label}</div>${bar}<div class="wf-amount" style="color:${total?(amount>=0?'var(--green)':'var(--red)'):(amount<0?'var(--red)':'var(--text)')}">${fmt(amount)}</div></div>`;
+}
+
+// ===== CALCUL INTÉRÊTS IN FINE AVEC PROFIL DE TIRAGE =====
+function calcInteretsInFine(emprunt, tauxAnnuel, dureePortage, travauxTTC, prixAchat, profil, commissionNuAnn){
+  // Construction du profil de tirage mois par mois
+  const tirages = new Array(dureePortage+1).fill(0);
+  const capitalTire = new Array(dureePortage+1).fill(0);
+
+  if(profil === 'total'){
+    // Tout tiré dès M0
+    tirages[0] = emprunt;
+  } else if(profil === 'achat'){
+    // M0: acquisition (tout sauf travaux mais au moins prixAchat)
+    const trancheAchat = Math.min(emprunt, prixAchat * 1.15); // prix achat + frais ~15%
+    const resteParTravaux = Math.max(0, emprunt - trancheAchat);
+    tirages[0] = trancheAchat;
+    // Travaux en 3 appels: 35% / 40% / 25%
+    const m1 = Math.round(dureePortage * 0.15);
+    const m2 = Math.round(dureePortage * 0.40);
+    const m3 = Math.round(dureePortage * 0.70);
+    tirages[Math.min(m1, dureePortage)] += resteParTravaux * 0.35;
+    tirages[Math.min(m2, dureePortage)] += resteParTravaux * 0.40;
+    tirages[Math.min(m3, dureePortage)] += resteParTravaux * 0.25;
+  } else {
+    // Linéaire: tirage mensuel égal
+    const mensuel = emprunt / dureePortage;
+    for(let i=0; i<dureePortage; i++) tirages[i] = mensuel;
+  }
+
+  // Calcul capital tiré cumulé chaque mois
+  let cumul = 0;
+  for(let m=0; m<=dureePortage; m++){
+    cumul += tirages[m];
+    capitalTire[m] = Math.min(cumul, emprunt);
+  }
+
+  // Calcul intérêts mois par mois
+  const tauxMensuel = tauxAnnuel / 12 / 100;
+  const commMensuelle = commissionNuAnn / 12 / 100;
+  let totalInterets = 0;
+  let totalCommNu = 0;
+  const detail = [];
+
+  for(let m=1; m<=dureePortage; m++){
+    const cap = capitalTire[m-1]; // capital en début de mois
+    const nonTire = Math.max(0, emprunt - cap);
+    const interetsMois = cap * tauxMensuel;
+    const commNuMois = nonTire * commMensuelle;
+    totalInterets += interetsMois;
+    totalCommNu += commNuMois;
+    detail.push({
+      mois: m,
+      tirage: tirages[m] || 0,
+      capitalTire: capitalTire[m],
+      nonTire,
+      interetsMois,
+      commNuMois,
+      coutMois: interetsMois + commNuMois
+    });
+  }
+
+  return {totalInterets, totalCommNu, detail, capitalTire};
+}
+
+// ===== CALCUL PRINCIPAL =====
+let lastCalc = {};
+
+function calc(){
+  // INPUTS
+  const prixAchat=v('prix-achat');
+  const droitsMut=v('droits-mut')/100;
+  const fraisNotaire=v('frais-notaire');
+  const fraisAgenceAchat=v('frais-agence-achat');
+  const surface=v('surface')||1;
+  const apport=v('apport');
+  const emprunt=v('emprunt');
+  const dureePortage=v('duree-portage')||12;
+  const fraisDossier=v('frais-dossier');
+  const garantie=v('garantie');
+  const travauxHT=v('travaux-ht');
+  const tvaTravaux=v('tva-travaux')/100;
+  const contingence=v('contingence')/100;
+  const moe=v('moe')/100;
+  const diagnostics=v('diagnostics');
+  const taxeFonciere=v('taxe-fonciere')*dureePortage/12;
+  const assurancePNO=v('assurance-pno')*dureePortage/12;
+  const chargesCopro=v('charges-copro')*dureePortage;
+  const fraisGestion=v('frais-gestion');
+  const prixVente=v('prix-vente');
+  const honoVente=v('hono-vente')/100;
+  const fraisNotaireVente=v('frais-notaire-vente');
+  const regimeTva=el('regime-tva')?.value||'exo';
+
+  // TRAVAUX
+  const travauxContigence=travauxHT*contingence;
+  const travauxMOE=travauxHT*moe;
+  const travauxTTC=travauxHT*(1+tvaTravaux)+travauxContigence+travauxMOE;
+
+  // ACQUISITION
+  const dmto=prixAchat*droitsMut;
+  const totalAcquisition=prixAchat+dmto+fraisNotaire+fraisAgenceAchat;
+
+  // FINANCEMENT
+  let totalInterets=0, totalCommNu=0, tirageDetail=[], assurCredit=0, mensualite=0, tauxEffectif=0;
+
+  if(finMode==='infine'){
+    const euribor=v('euribor');
+    const spread=v('spread-bps')/100;
+    const tauxAllin=euribor+spread;
+    tauxEffectif=tauxAllin;
+    const profil=el('tirage-profil')?.value||'achat';
+    const commNuAnn=v('commission-nu');
+    const res=calcInteretsInFine(emprunt,tauxAllin,dureePortage,travauxTTC,totalAcquisition,profil,commNuAnn);
+    totalInterets=res.totalInterets;
+    totalCommNu=res.totalCommNu;
+    tirageDetail=res.detail;
+    updateAllin();
+  } else {
+    const tauxCredit=v('taux-amort')/100;
+    const dureeCredit=v('duree-amort')||dureePortage;
+    tauxEffectif=v('taux-amort');
+    const r=tauxCredit/12;
+    mensualite = r>0 ? emprunt*r/(1-Math.pow(1+r,-dureeCredit)) : emprunt/dureeCredit;
+    totalInterets=mensualite*dureePortage - (emprunt*(1-Math.pow(1+r,-dureeCredit))*r/(r*(1+r)));
+    // Simplification: total intérêts = mensualité * mois - capital remboursé
+    const capitalRembourse = emprunt - emprunt*Math.pow(1+r,-dureePortage);
+    totalInterets = mensualite*dureePortage - capitalRembourse;
+    assurCredit = emprunt*(v('taux-assur')/100)*(dureePortage/12);
+  }
+
+  const totalFinancement=totalInterets+totalCommNu+assurCredit+fraisDossier+garantie;
+
+  // PORTAGE
+  const totalPortage=taxeFonciere+assurancePNO+chargesCopro+fraisGestion;
+
+  // VENTE
+  const honoVenteMontant=prixVente*honoVente;
+  const totalVente=honoVenteMontant+fraisNotaireVente;
+
+  // COÛT REVIENT
+  const coutRevient=totalAcquisition+travauxTTC+diagnostics+totalFinancement+totalPortage+totalVente;
+  const prixRevientM2=coutRevient/surface;
+
+  // TVA
+  let tvaNetDue=0,tvaCollectee=0,tvaDeduite=0,prixVenteHT=prixVente;
+  if(regimeTva==='plein'){
+    prixVenteHT=prixVente/1.2;tvaCollectee=prixVente-prixVenteHT;tvaDeduite=travauxHT*tvaTravaux;tvaNetDue=tvaCollectee-tvaDeduite;
+  } else if(regimeTva==='marge'){
+    tvaCollectee=(prixVente-prixAchat)*0.2/1.2;tvaNetDue=tvaCollectee;prixVenteHT=prixVente-tvaCollectee;
+  }
+  const baseImposableIS=regimeTva==='exo'?prixVente:prixVenteHT;
+
+  // MARGE
+  const margeBrute=prixVente-coutRevient;
+  const margeBrutePct=prixVente>0?margeBrute/prixVente*100:0;
+
+  // IS
+  const beneficeImposable=Math.max(0,baseImposableIS-(totalAcquisition+travauxTTC+diagnostics+totalFinancement+totalPortage+totalVente));
+  const isTaux15=Math.min(beneficeImposable,42500)*0.15;
+  const isTaux25=Math.max(0,beneficeImposable-42500)*0.25;
+  const isTotal=isTaux15+isTaux25;
+  const tauxEffectifIS=beneficeImposable>0?isTotal/beneficeImposable*100:0;
+
+  const beneficeNet=margeBrute-isTotal;
+  const beneficeNetPct=prixVente>0?beneficeNet/prixVente*100:0;
+  const roi=apport>0?beneficeNet/apport*100:0;
+  const roiAnnuel=dureePortage>0?roi/(dureePortage/12):0;
+  const ecoDMTO=prixAchat*0.0580665-dmto;
+  const ltv=(totalAcquisition+travauxTTC)>0?emprunt/(totalAcquisition+travauxTTC)*100:0;
+
+  // Ratios MDB
+  const ratioCouverture=margeBrute>0?totalInterets/margeBrute*100:0;
+
+  // Calcul version amortissable pour comparatif (en gardant le même taux all-in)
+  const tauxAllin=finMode==='infine'?(v('euribor')+v('spread-bps')/100):v('taux-amort');
+  const r=tauxAllin/12/100;
+  const mA=r>0?emprunt*r/(1-Math.pow(1+r,-dureePortage)):emprunt/dureePortage;
+  const capitalRembA=emprunt-emprunt*Math.pow(1+r,-dureePortage);
+  const interetsAmort=mA*dureePortage-capitalRembA;
+  const ecoInFine=interetsAmort-(totalInterets+totalCommNu);
+
+  // Économie non-utilisation
+  const capitalMoyTire=tirageDetail.length>0?tirageDetail.reduce((s,d)=>s+d.capitalTire,0)/tirageDetail.length:emprunt;
+  const nonTireMoy=Math.max(0,emprunt-capitalMoyTire);
+
+  // Store for PDF
+  lastCalc={prixAchat,droitsMut,fraisNotaire,fraisAgenceAchat,surface,apport,emprunt,dureePortage,fraisDossier,garantie,travauxHT,tvaTravaux,contingence,moe,diagnostics,taxeFonciere,assurancePNO,chargesCopro,fraisGestion,prixVente,honoVente,fraisNotaireVente,regimeTva,travauxContigence,travauxMOE,travauxTTC,dmto,totalAcquisition,totalInterets,totalCommNu,assurCredit,totalFinancement,totalPortage,totalVente,coutRevient,prixRevientM2,prixVenteHT,tvaNetDue,tvaCollectee,tvaDeduite,baseImposableIS,margeBrute,margeBrutePct,beneficeImposable,isTaux15,isTaux25,isTotal,tauxEffectifIS,beneficeNet,beneficeNetPct,roi,roiAnnuel,ecoDMTO,ltv,ratioCouverture,tauxEffectif,tauxAllin,interetsAmort,ecoInFine,nonTireMoy,mensualite,tirageDetail,capitalMoyTire};
+
+  // ===== UPDATE UI =====
+
+  // METRICS
+  el('m-benefice').textContent=fmt(beneficeNet);
+  el('m-benefice').className='metric-value '+(beneficeNet>=0?'positive':'negative');
+  el('m-benefice-pct').textContent=fp(beneficeNetPct)+' du prix de vente';
+  el('m-is').textContent=fmt(isTotal);
+  el('m-is-rate').textContent='Taux effectif : '+fp(tauxEffectifIS);
+  el('m-roi').textContent=fp(roi);
+  el('m-roi-annuel').textContent='Annualisé : '+fp(roiAnnuel);
+  el('m-revient').textContent=fmt(coutRevient);
+  el('m-revient-m2').textContent=fmt(prixRevientM2)+'/m²';
+  el('m-marge-brute').textContent=fmt(margeBrute)+' ('+fp(margeBrutePct)+')';
+  const barPct=Math.min(100,Math.max(0,margeBrutePct/30*100));
+  el('profit-bar').style.width=barPct+'%';
+  el('profit-bar-pct').textContent=fp(margeBrutePct);
+
+  // CREDIT SUMMARY
+  const isInFine=finMode==='infine';
+  const csbHTML=`
+    <div class="csb-row"><span class="k">${isInFine?'Euribor 3M + spread':'Taux fixe amortissable'}</span><span class="v a">${fp(tauxEffectif,2)}</span></div>
+    <div class="csb-row"><span class="k">Total intérêts (${dureePortage} mois)</span><span class="v r">${fmt(totalInterets)}</span></div>
+    ${isInFine?`<div class="csb-row"><span class="k">Commission non-utilisation</span><span class="v r">${fmt(totalCommNu)}</span></div>`:''}
+    ${isInFine?`<div class="csb-row"><span class="k">Économie vs amortissable</span><span class="v g">${fmt(ecoInFine)}</span></div>`:''}
+    <div class="csb-row"><span class="k">Coût total crédit</span><span class="v r">${fmt(totalFinancement)}</span></div>
+    <div class="csb-row"><span class="k">LTV (emprunt / acq+trav)</span><span class="v ${ltv<=75?'g':ltv<=85?'':''}">${fp(ltv)}</span></div>`;
+  el('credit-summary').innerHTML=csbHTML;
+
+  // WATERFALL COSTS
+  const maxC=Math.max(totalAcquisition,travauxTTC,totalFinancement,totalPortage,totalVente,1);
+  let h='';
+  h+=wfRow('Acquisition (prix + frais)',totalAcquisition,'var(--text)',false,false,totalAcquisition/maxC*100,'var(--accent2)');
+  h+=wfRow('└ Prix achat',prixAchat,'var(--muted)',true);
+  h+=wfRow('└ DMTO (0,715%)',dmto,'var(--muted)',true);
+  h+=wfRow('└ Notaire + agence',fraisNotaire+fraisAgenceAchat,'var(--muted)',true);
+  h+=wfRow('Travaux & rénovation',travauxTTC,'var(--text)',false,false,travauxTTC/maxC*100,'var(--orange)');
+  h+=wfRow('└ Travaux HT',travauxHT,'var(--muted)',true);
+  h+=wfRow('└ TVA travaux',travauxHT*tvaTravaux,'var(--muted)',true);
+  h+=wfRow('└ Imprévus + MOE',travauxContigence+travauxMOE,'var(--muted)',true);
+  h+=wfRow('Diagnostics',diagnostics,'var(--text)',false,false,diagnostics/maxC*100,'var(--accent)');
+  h+=wfRow('Charges financières',totalFinancement,'var(--text)',false,false,totalFinancement/maxC*100,'var(--red)');
+  h+=wfRow('└ Intérêts '+( isInFine?'in fine Euribor':'amortissable'),totalInterets,'var(--muted)',true);
+  if(isInFine&&totalCommNu>0) h+=wfRow('└ Commission non-utilisation',totalCommNu,'var(--muted)',true);
+  if(assurCredit>0) h+=wfRow('└ Assurance emprunteur',assurCredit,'var(--muted)',true);
+  h+=wfRow('└ Frais dossier + garantie',fraisDossier+garantie,'var(--muted)',true);
+  h+=wfRow('Frais de portage',totalPortage,'var(--text)',false,false,totalPortage/maxC*100,'var(--accent2)');
+  h+=wfRow('Frais de vente',totalVente,'var(--text)',false,false,totalVente/maxC*100,'var(--red)');
+  h+=wfRow('COÛT DE REVIENT TOTAL',coutRevient,'var(--text)',false,true);
+  h+=wfRow('Prix de vente',prixVente,'var(--green)',false,false);
+  h+=`<div class="wf-row total separator" style="color:${margeBrute>=0?'var(--green)':'var(--red)'}"><div class="wf-label">Marge brute</div><div style="width:90px"></div><div class="wf-amount" style="color:${margeBrute>=0?'var(--green)':'var(--red)'};font-size:1.05rem">${fmt(margeBrute)}</div></div>`;
+  el('waterfall-costs').innerHTML=h;
+
+  // TVA
+  let tvaH='';
+  if(regimeTva==='exo') tvaH=`<div class="alert success"><span>✓</span><div>Exonéré de TVA (art. 261-5 CGI). Pas de TVA collectée ni récupérable sur les travaux.</div></div>`;
+  else if(regimeTva==='marge') tvaH=`<div class="tax-block"><div class="tax-title">TVA sur marge (art. 268)</div><div class="tax-line"><span class="name">PV - PA = Marge</span><span class="val">${fmt(prixVente-prixAchat)}</span></div><div class="tax-line"><span class="name">TVA collectée (20%/1,2)</span><span class="val" style="color:var(--red)">${fmt(tvaCollectee)}</span></div><div class="tax-line" style="color:var(--orange)"><span class="name"><strong>TVA nette due</strong></span><span class="val">${fmt(tvaNetDue)}</span></div></div>`;
+  else tvaH=`<div class="tax-block"><div class="tax-title">TVA prix total (art. 257-I)</div><div class="tax-line"><span class="name">Prix HT</span><span class="val">${fmt(prixVenteHT)}</span></div><div class="tax-line"><span class="name">TVA collectée 20%</span><span class="val" style="color:var(--red)">${fmt(tvaCollectee)}</span></div><div class="tax-line"><span class="name">TVA travaux récupérée</span><span class="val" style="color:var(--green)">${fmt(tvaDeduite)}</span></div><div class="tax-line" style="color:var(--orange)"><span class="name"><strong>TVA nette à reverser</strong></span><span class="val">${fmt(tvaNetDue)}</span></div></div>`;
+  el('tva-analysis').innerHTML=tvaH;
+
+  // WATERFALL FINANCE
+  let fH='';
+  fH+=wfRow('Apport personnel',apport,'var(--green)');
+  fH+=wfRow('Ligne de crédit (tirage total)',emprunt,'var(--accent2)');
+  fH+=wfRow('Total mobilisé',apport+emprunt,'var(--text)',false,true);
+  fH+=`<div style="height:.4rem"></div>`;
+  fH+=wfRow('Remboursement capital (in fine)',-(emprunt),'var(--red)');
+  fH+=wfRow('Intérêts payés',-(totalInterets),'var(--red)');
+  if(isInFine&&totalCommNu>0) fH+=wfRow('Commission non-utilisation',-(totalCommNu),'var(--red)');
+  fH+=wfRow('Coût total crédit',-(totalFinancement),'var(--text)',false,true);
+  fH+=wfRow('Flux net encaissé à la vente',prixVente-emprunt-isTotal,'var(--text)',false,true);
+  el('waterfall-finance').innerHTML=fH;
+
+  // FISCALITE
+  el('f-resultat').textContent=fmt(beneficeImposable);
+  el('f-is-reduit').textContent=fmt(isTaux15);
+  el('f-is-normal').textContent=fmt(isTaux25);
+  el('f-is-total').textContent=fmt(isTotal);
+  el('t-pv').textContent=fmt(baseImposableIS);
+  el('t-cr').textContent=fmt(totalAcquisition+travauxTTC+diagnostics);
+  el('t-cf').textContent=fmt(totalFinancement);
+  el('t-fp').textContent=fmt(totalPortage+totalVente);
+  el('t-bi').textContent=fmt(beneficeImposable);
+  el('t-tr15').textContent=fmt(isTaux15);
+  el('t-tr25').textContent=fmt(isTaux25);
+  el('t-istot').textContent=fmt(isTotal);
+  el('t-teff').textContent=fp(tauxEffectifIS);
+  el('t-dmto-rate').textContent='0,715% = '+fmt(dmto);
+  el('t-eco-dmto').textContent='+'+fmt(ecoDMTO)+' économisés';
+  const tvaLabels={exo:'Exonéré — Art. 261-5 CGI',marge:'TVA sur marge — Art. 268 CGI',plein:'TVA sur prix total — Art. 257-I CGI'};
+  el('tva-regime-detail').innerHTML=`<div class="tax-line" style="flex-direction:column"><span class="name">${tvaLabels[regimeTva]}</span></div>`;
+
+  // ===== FINANCEMENT TAB =====
+  el('fin-interets-total').textContent=fmt(totalInterets+totalCommNu);
+  el('fin-interets-sub').textContent=(isInFine?fp(tauxEffectif,2)+' all-in':'Amortissable '+fp(v('taux-amort'),2));
+  el('fin-ratio-couverture').textContent=fp(ratioCouverture);
+  el('fin-eco-amort').textContent=isInFine?fmt(Math.max(0,ecoInFine)):fmt(0);
+  el('fin-eco-sub').textContent=isInFine?'vs crédit amortissable même taux':'Mode in fine pour voir l\'écart';
+  el('fin-non-tire').textContent=fmt(nonTireMoy);
+  el('fin-cnu').textContent=fmt(totalCommNu);
+
+  // TABLEAU TIRAGE (in fine only)
+  if(isInFine && tirageDetail.length>0){
+    let tt=`<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr>`;
+    ['Mois','Tirage M','Capital tiré','Non utilisé','Intérêts mois','Comm. n.u.','Coût mois'].forEach(h=>tt+=`<th style="background:var(--surface2);padding:.45rem .6rem;text-align:right;font-size:.62rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border:1px solid var(--border)">${h}</th>`);
+    tt+='</tr></thead><tbody>';
+    tirageDetail.forEach((d,i)=>{
+      const bg=i%2===0?'':'background:rgba(255,255,255,.02)';
+      const ti=d.tirage>0?`<span style="color:var(--accent2)">+${fmt(d.tirage)}</span>`:'—';
+      tt+=`<tr style="${bg}">
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;color:var(--muted)">M${d.mois}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right">${ti}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;color:var(--text)">${fmt(d.capitalTire)}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;color:var(--muted)">${fmt(d.nonTire)}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;color:var(--red)">${fmt(d.interetsMois)}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;color:var(--orange)">${d.commNuMois>0?fmt(d.commNuMois):'—'}</td>
+        <td style="padding:.38rem .6rem;border:1px solid var(--border);text-align:right;font-weight:600;color:var(--red)">${fmt(d.coutMois)}</td>
+      </tr>`;
+    });
+    // Total
+    tt+=`<tr style="background:var(--surface2);font-weight:700">
+      <td colspan="4" style="padding:.45rem .6rem;border:1px solid var(--border);color:var(--text)">TOTAL</td>
+      <td style="padding:.45rem .6rem;border:1px solid var(--border);text-align:right;color:var(--red)">${fmt(totalInterets)}</td>
+      <td style="padding:.45rem .6rem;border:1px solid var(--border);text-align:right;color:var(--orange)">${fmt(totalCommNu)}</td>
+      <td style="padding:.45rem .6rem;border:1px solid var(--border);text-align:right;color:var(--red)">${fmt(totalInterets+totalCommNu)}</td>
+    </tr>`;
+    tt+='</tbody></table>';
+    el('tirage-tableau').innerHTML=tt;
+  } else {
+    el('tirage-tableau').innerHTML=`<div class="alert info"><span>ℹ️</span><span>Activez le mode "In fine (MDB)" dans la sidebar pour voir le détail du tirage mensuel.</span></div>`;
+  }
+
+  // SENSIBILITÉ EURIBOR
+  const baseEuribor=isInFine?v('euribor'):v('taux-amort');
+  const spread=isInFine?v('spread-bps')/100:0;
+  const deltas=[-1,-0.5,0,0.5,1];
+  let st=`<table class="sensi-table"><thead><tr><th>Variation Euribor</th><th>Taux all-in</th><th>Intérêts totaux</th><th>Bénéfice net</th><th>ROI apport</th><th>Impact vs base</th></tr></thead><tbody>`;
+  deltas.forEach(d=>{
+    const e2=Math.max(0,baseEuribor+d);
+    const t2=isInFine?e2+spread:e2;
+    let ints2=0,cn2=0;
+    if(isInFine){
+      const profil=el('tirage-profil')?.value||'achat';
+      const r2=calcInteretsInFine(emprunt,t2,dureePortage,travauxTTC,totalAcquisition,profil,v('commission-nu'));
+      ints2=r2.totalInterets;cn2=r2.totalCommNu;
+    } else {
+      const r=t2/12/100;
+      const mA2=r>0?emprunt*r/(1-Math.pow(1+r,-dureePortage)):emprunt/dureePortage;
+      const capR=emprunt-emprunt*Math.pow(1+r,-dureePortage);
+      ints2=mA2*dureePortage-capR;
+    }
+    const tf2=ints2+cn2+assurCredit+fraisDossier+garantie;
+    const cr2=totalAcquisition+travauxTTC+diagnostics+tf2+totalPortage+totalVente;
+    const mb2=prixVente-cr2;
+    const bi2=Math.max(0,baseImposableIS-(cr2));
+    const is2=Math.min(bi2,42500)*.15+Math.max(0,bi2-42500)*.25;
+    const bn2=mb2-is2;
+    const roi2=apport>0?bn2/apport*100:0;
+    const impact=bn2-beneficeNet;
+    const isBase=d===0;
+    st+=`<tr class="${isBase?'base':''}">
+      <td class="${d>0?'neg':d<0?'pos':''}">${d>0?'+':d<0?'':''} ${d.toFixed(1)}%</td>
+      <td>${fp(t2,2)}</td>
+      <td class="neg">${fmt(ints2+cn2)}</td>
+      <td class="${bn2>=0?'pos':'neg'}">${fmt(bn2)}</td>
+      <td class="${roi2>=0?'pos':'neg'}">${fp(roi2)}</td>
+      <td class="${impact>=0?'pos':'neg'}">${impact>=0?'+':''}${fmt(impact)}</td>
+    </tr>`;
+  });
+  st+='</tbody></table>';
+  el('sensi-table-wrap').innerHTML=st;
+
+  // COMPARATIF IN FINE vs AMORTISSABLE
+  const tauxC=isInFine?(v('euribor')+v('spread-bps')/100):v('taux-amort');
+  const rc=tauxC/12/100;
+  const mAmort=rc>0?emprunt*rc/(1-Math.pow(1+rc,-dureePortage)):emprunt/dureePortage;
+  const capRembAmort=rc>0?emprunt-emprunt*Math.pow(1+rc,-dureePortage):0;
+  const interetsAmort2=mAmort*dureePortage-capRembAmort;
+  const coutInFine=totalInterets+totalCommNu+fraisDossier+garantie;
+  const coutAmort=interetsAmort2+fraisDossier+garantie;
+  el('comparatif-table').innerHTML=`
+    <table class="sensi-table">
+      <thead><tr><th>Critère</th><th>In fine MDB (Euribor)</th><th>Amortissable (taux fixe)</th><th>Différence</th></tr></thead>
+      <tbody>
+        <tr><td>Nature du remboursement</td><td>Capital en totalité à la vente</td><td>Capital + intérêts chaque mois</td><td>—</td></tr>
+        <tr class="base"><td>Taux de référence</td><td>${fp(tauxC,2)} (Euribor ${fp(v('euribor'),2)} + ${v('spread-bps')} bps)</td><td>${fp(tauxC,2)} fixe</td><td>Variable vs fixe</td></tr>
+        <tr><td>Intérêts totaux</td><td class="warn">${fmt(totalInterets)}</td><td class="warn">${fmt(interetsAmort2)}</td><td class="${totalInterets<=interetsAmort2?'pos':'neg'}">${totalInterets<=interetsAmort2?'In fine +':''} ${fmt(Math.abs(interetsAmort2-totalInterets))}</td></tr>
+        <tr><td>Commission non-utilisation</td><td class="${totalCommNu>0?'warn':''}">${fmt(totalCommNu)}</td><td>—</td><td class="${totalCommNu>0?'neg':'pos'}">${totalCommNu>0?'—':'Zéro'}</td></div></tr>
+        <tr><td>Coût total ligne</td><td class="warn">${fmt(coutInFine)}</td><td class="warn">${fmt(coutAmort)}</td><td class="${coutInFine<=coutAmort?'pos':'neg'}">${coutInFine<=coutAmort?'Éco. '+fmt(coutAmort-coutInFine):'Surcoût '+fmt(coutInFine-coutAmort)}</td></tr>
+        <tr><td>Flux mensuel pendant portage</td><td class="pos">Intérêts seuls (faible)</td><td class="neg">Mensualité complète : ${fmt(mAmort)}</td><td class="pos">Tréso. préservée</td></tr>
+        <tr><td>Risque de taux</td><td class="neg">Variable (Euribor)</td><td class="pos">Aucun (taux fixe)</td><td>—</td></tr>
+      </tbody>
+    </table>`;
+
+  // CASHFLOW
+  const months=[];
+  for(let i=0;i<=dureePortage;i++){
+    let flux=0,label='';
+    if(i===0){flux=-(totalAcquisition-emprunt);label='Achat (apport)';}
+    else if(i===dureePortage){flux=prixVente-emprunt-isTotal;label='Vente nette IS';}
+    const mensuelPort=-(taxeFonciere/dureePortage+assurancePNO/dureePortage+chargesCopro);
+    if(i>0&&i<dureePortage){flux+=mensuelPort;}
+    if(isInFine && i>0 && i<=tirageDetail.length){
+      const d=tirageDetail[i-1];
+      flux-=(d.interetsMois+d.commNuMois);
+      if(d.tirage>0 && i>0){label=(label?label+' + ':'')+'Tirage trav.';}
+    }
+    months.push({i,flux:Math.round(flux),label});
+  }
+  const step=Math.max(1,Math.floor(dureePortage/12));
+  let cfH='<div style="display:flex;gap:3px;align-items:flex-end;overflow-x:auto;padding-bottom:.5rem">';
+  months.filter((_,i)=>i%step===0||_.label).forEach(m=>{
+    const col=m.flux>=0?'var(--green)':'var(--red)';
+    cfH+=`<div style="min-width:82px;background:var(--surface2);border-radius:7px;padding:.6rem .5rem;flex-shrink:0;border:1px solid var(--border)">
+      <div style="font-size:.6rem;color:var(--muted);margin-bottom:.25rem">M${m.i}${m.label?' — '+m.label:''}</div>
+      <div style="font-size:.78rem;font-weight:600;color:${col}">${m.flux>=0?'+':''}${Math.round(m.flux/1000)}k€</div>
+    </div>`;
+  });
+  cfH+='</div>';
+  el('cashflow-table').innerHTML=cfH;
+}
+
+// ===== PDF =====
+function closePdf(){el('pdf-overlay').classList.remove('open');}
+function closePdfOutside(e){if(e.target===el('pdf-overlay'))closePdf();}
+function doPrint(){
+  el('pdf-doc-print').innerHTML=el('pdf-doc').innerHTML;
+  el('pdf-print-target').style.display='block';
+  window.print();
+  setTimeout(()=>{el('pdf-print-target').style.display='none';},500);
+}
+
+function openPdf(){
+  const c=lastCalc;
+  if(!c||!c.coutRevient){alert('Lancez d\'abord une simulation.');return;}
+  const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const opName=el('pdf-op-name').value||'Opération immobilière';
+  const company=el('pdf-company').value||'[Votre société]';
+  const f=(n,d=0)=>isNaN(n)?'—':new Intl.NumberFormat('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n)+' €';
+  const fp2=(n,d=1)=>isNaN(n)?'—':n.toFixed(d)+' %';
+  const tvaLabels={exo:'Exonéré (art. 261-5 CGI)',marge:'TVA sur marge (art. 268 CGI)',plein:'TVA sur prix total (art. 257-I CGI)'};
+  const typeLabels={hab:'Habitation',com:'Commercial',terr:'Terrain'};
+  const statutLabels={ancien:'Ancien',neuf:'VEFA/Neuf',vente:'Vente SCI'};
+  const sLabels={sas:'SAS',eirl:'EI/EURL',sci:'SCI IS'};
+  const viab=c.beneficeNet>0&&c.ltv<80?'FAVORABLE':c.beneficeNet>0?'ACCEPTABLE':'DÉFAVORABLE';
+  const viabC=viab==='FAVORABLE'?'#166534':viab==='ACCEPTABLE'?'#92400e':'#991b1b';
+  const isInFine2=finMode==='infine';
+
+  // Construit les lignes du tableau de tirage (max 12 pour le PDF)
+  let tirageRows='';
+  if(isInFine2&&c.tirageDetail&&c.tirageDetail.length>0){
+    const step=Math.max(1,Math.floor(c.tirageDetail.length/10));
+    c.tirageDetail.filter((_,i)=>i%step===0||_.tirage>0||i===c.tirageDetail.length-1).forEach(d=>{
+      tirageRows+=`<tr ${d.tirage>0?'style="background:#fffbeb"':''}>
+        <td class="right">M${d.mois}</td>
+        <td class="right">${d.tirage>0?f(d.tirage):'—'}</td>
+        <td class="right">${f(d.capitalTire)}</td>
+        <td class="right neg-val">${f(d.interetsMois)}</td>
+        <td class="right ${d.commNuMois>0?'warn-val':''}">${d.commNuMois>1?f(d.commNuMois):'—'}</td>
+        <td class="right neg-val">${f(d.coutMois)}</td>
+      </tr>`;
+    });
+  }
+
+  el('pdf-doc').innerHTML=`
+  <div class="pdf-cover">
+    <div class="pdf-cover-pre">Dossier de financement — Marchand de biens professionnel</div>
+    <h1>${opName}</h1>
+    <div class="pdf-cover-sub">${company} · ${sLabels[el('structure').value]||'SAS'} · NAF 6810Z</div>
+    <div class="pdf-cover-meta">
+      <span>Type : ${typeLabels[currentType]} ${statutLabels[currentStatut]}</span>
+      <span>Surface : ${c.surface} m²</span>
+      <span>Portage : ${c.dureePortage} mois</span>
+      <span>Financement : ${isInFine2?'In fine Euribor':'Amortissable taux fixe'}</span>
+      <span>Date : ${today}</span>
+    </div>
+  </div>
+
+  <!-- 1. SYNTHÈSE -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">1. Synthèse exécutive</div>
+    <div class="pdf-highlight-bar">
+      <span class="label">Bénéfice net après IS</span>
+      <span class="val ${c.beneficeNet>=0?'pos':'neg'}">${f(c.beneficeNet)}</span>
+    </div>
+    <div class="pdf-kpi-row">
+      <div class="pdf-kpi"><div class="pdf-kpi-label">Coût de revient</div><div class="pdf-kpi-val">${f(c.coutRevient)}</div><div class="pdf-kpi-sub">${f(c.prixRevientM2)}/m²</div></div>
+      <div class="pdf-kpi"><div class="pdf-kpi-label">Prix vente cible</div><div class="pdf-kpi-val">${f(c.prixVente)}</div><div class="pdf-kpi-sub">Marge brute : ${fp2(c.margeBrutePct)}</div></div>
+      <div class="pdf-kpi"><div class="pdf-kpi-label">ROI apport</div><div class="pdf-kpi-val ${c.roi>=0?'pos':'neg'}">${fp2(c.roi)}</div><div class="pdf-kpi-sub">Annualisé : ${fp2(c.roiAnnuel)}</div></div>
+      <div class="pdf-kpi"><div class="pdf-kpi-label">LTV emprunt</div><div class="pdf-kpi-val ${c.ltv<=75?'pos':c.ltv<=85?'warn':'neg'}">${fp2(c.ltv)}</div><div class="pdf-kpi-sub">Emprunt / acq.+trav.</div></div>
+    </div>
+    <div class="pdf-alert ${viab==='FAVORABLE'?'ok':viab==='ACCEPTABLE'?'warn':'info'}">
+      <strong>Viabilité : <span style="color:${viabC}">${viab}</span></strong> — Bénéfice net ${f(c.beneficeNet)} · Marge ${fp2(c.margeBrutePct)} · LTV ${fp2(c.ltv)} · ROI annualisé ${fp2(c.roiAnnuel)}
+    </div>
+  </div>
+
+  <!-- 2. FINANCEMENT -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">2. Plan de financement — Ligne de crédit MDB (${isInFine2?'In fine Euribor 3M':'Amortissable taux fixe'})</div>
+    <div class="pdf-two-col">
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Structure</div>
+        <div class="pdf-infobox-row"><span class="k">Apport personnel</span><span class="v g">${f(c.apport)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Montant ligne demandé</span><span class="v">${f(c.emprunt)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Total mobilisé</span><span class="v">${f(c.apport+c.emprunt)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">LTV (emprunt / acq+trav)</span><span class="v ${c.ltv<=75?'g':''}">${fp2(c.ltv)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Durée portage</span><span class="v">${c.dureePortage} mois</span></div>
+      </div>
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Conditions crédit demandées</div>
+        ${isInFine2?`
+        <div class="pdf-infobox-row"><span class="k">Index</span><span class="v">Euribor 3M (${fp2(v('euribor'),2)})</span></div>
+        <div class="pdf-infobox-row"><span class="k">Spread bancaire</span><span class="v">+${v('spread-bps')} bps</span></div>
+        <div class="pdf-infobox-row"><span class="k">Taux all-in</span><span class="v">${fp2(c.tauxAllin,2)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Profil tirage</span><span class="v">${el('tirage-profil').options[el('tirage-profil').selectedIndex].text}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Commission non-utilisation</span><span class="v">${fp2(v('commission-nu'),2)} / an</span></div>
+        <div class="pdf-infobox-row"><span class="k">Remboursement capital</span><span class="v r">In fine à la vente</span></div>
+        `:`
+        <div class="pdf-infobox-row"><span class="k">Taux fixe</span><span class="v">${fp2(v('taux-amort'),2)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Durée amortissement</span><span class="v">${v('duree-amort')} mois</span></div>
+        <div class="pdf-infobox-row"><span class="k">Mensualité</span><span class="v r">${f(c.mensualite)}</span></div>
+        `}
+        <div class="pdf-infobox-row"><span class="k">Intérêts totaux</span><span class="v r">${f(c.totalInterets)}</span></div>
+        ${isInFine2&&c.totalCommNu>0?`<div class="pdf-infobox-row"><span class="k">Commission non-utilisation</span><span class="v r">${f(c.totalCommNu)}</span></div>`:''}
+        <div class="pdf-infobox-row"><span class="k">Frais dossier + garantie</span><span class="v">${f(c.fraisDossier+c.garantie)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Coût total ligne</span><span class="v r">${f(c.totalFinancement)}</span></div>
+      </div>
+    </div>
+
+    ${isInFine2?`
+    <div class="pdf-infobox" style="margin-top:3mm">
+      <div class="pdf-infobox-title">Ratio de couverture MDB (intérêts / marge brute)</div>
+      <div class="pdf-infobox-row"><span class="k">Intérêts totaux ligne</span><span class="v r">${f(c.totalInterets+c.totalCommNu)}</span></div>
+      <div class="pdf-infobox-row"><span class="k">Marge brute opération</span><span class="v">${f(c.margeBrute)}</span></div>
+      <div class="pdf-infobox-row"><span class="k">Ratio couverture (intérêts / marge)</span><span class="v ${c.ratioCouverture<20?'g':c.ratioCouverture<35?'warn':'r'}">${fp2(c.ratioCouverture)}</span></div>
+      <div class="pdf-infobox-row"><span class="k">Économie in fine vs amortissable</span><span class="v g">+${f(Math.max(0,c.ecoInFine))}</span></div>
+    </div>
+
+    ${tirageRows?`
+    <div style="margin-top:3mm">
+      <div class="pdf-infobox-title" style="margin-bottom:2mm">Tableau de tirage mensuel (sélection)</div>
+      <table class="pdf-table" style="font-size:7.5pt">
+        <tr><th>Mois</th><th class="right">Tirage</th><th class="right">Cap. tiré cumulé</th><th class="right">Intérêts</th><th class="right">Comm. n.u.</th><th class="right">Coût mois</th></tr>
+        ${tirageRows}
+        <tr class="total"><td colspan="3">TOTAL</td><td class="right neg-val">${f(c.totalInterets)}</td><td class="right warn-val">${f(c.totalCommNu)}</td><td class="right neg-val">${f(c.totalInterets+c.totalCommNu)}</td></tr>
+      </table>
+    </div>`:''}
+
+    <div style="margin-top:3mm">
+      <div class="pdf-infobox-title" style="margin-bottom:2mm">Analyse de sensibilité Euribor (±1%)</div>
+      <table class="pdf-table" style="font-size:7.5pt">
+        <tr><th>Var. Euribor</th><th class="right">Taux all-in</th><th class="right">Intérêts totaux</th><th class="right">Bénéfice net</th><th class="right">ROI apport</th></tr>
+        ${[-1,-0.5,0,0.5,1].map(d=>{
+          const e2=Math.max(0,v('euribor')+d);const t2=e2+v('spread-bps')/100;
+          const r2=calcInteretsInFine(c.emprunt,t2,c.dureePortage,c.travauxTTC,c.totalAcquisition,el('tirage-profil')?.value||'achat',v('commission-nu'));
+          const tf2=r2.totalInterets+r2.totalCommNu+c.assurCredit+c.fraisDossier+c.garantie;
+          const cr2=c.totalAcquisition+c.travauxTTC+c.diagnostics+tf2+c.totalPortage+c.totalVente;
+          const mb2=c.prixVente-cr2;
+          const bi2=Math.max(0,c.baseImposableIS-cr2);
+          const is2=Math.min(bi2,42500)*.15+Math.max(0,bi2-42500)*.25;
+          const bn2=mb2-is2;const roi2=c.apport>0?bn2/c.apport*100:0;
+          return `<tr ${d===0?'style="background:#f0f0f8;font-weight:700"':''}><td class="right">${d>=0?'+':''}${d.toFixed(1)}%</td><td class="right">${fp2(t2,2)}</td><td class="right neg-val">${f(r2.totalInterets+r2.totalCommNu)}</td><td class="right ${bn2>=0?'pos-val':'neg-val'}">${f(bn2)}</td><td class="right ${roi2>=0?'pos-val':'neg-val'}">${fp2(roi2)}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>
+    `:''}
+
+    <div class="pdf-alert info" style="margin-top:3mm">
+      <strong>Garantie proposée :</strong> Inscription hypothécaire de 1er rang sur le bien. Valeur estimée post-travaux : ${f(c.prixVente)} — couverture crédit : ${fp2(c.emprunt/c.prixVente*100)} du prix de vente cible.
+    </div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="pdf-page-break"></div>
+
+  <!-- 3. BUDGET -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">3. Budget prévisionnel détaillé</div>
+    <table class="pdf-table">
+      <tr><th style="width:52%">Poste</th><th class="right" style="width:18%">Montant</th><th class="right" style="width:13%">% coût total</th><th class="right" style="width:17%">€/m²</th></tr>
+      <tr><td><strong>ACQUISITION</strong></td><td class="right">${f(c.totalAcquisition)}</td><td class="right">${fp2(c.totalAcquisition/c.coutRevient*100)}</td><td class="right">${f(c.totalAcquisition/c.surface,0)}</td></tr>
+      <tr class="sub"><td>Prix d'achat</td><td class="right">${f(c.prixAchat)}</td><td class="right">—</td><td class="right">${f(c.prixAchat/c.surface,0)}</td></tr>
+      <tr class="sub"><td>DMTO MDB (0,715%)</td><td class="right pos-val">${f(c.dmto)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr class="sub"><td>Frais notarials + agence</td><td class="right">${f(c.fraisNotaire+c.fraisAgenceAchat)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr><td><strong>TRAVAUX & RÉNOVATION</strong></td><td class="right">${f(c.travauxTTC)}</td><td class="right">${fp2(c.travauxTTC/c.coutRevient*100)}</td><td class="right">${f(c.travauxTTC/c.surface,0)}</td></tr>
+      <tr class="sub"><td>Travaux HT</td><td class="right">${f(c.travauxHT)}</td><td class="right">—</td><td class="right">${f(c.travauxHT/c.surface,0)}</td></tr>
+      <tr class="sub"><td>TVA travaux (${Math.round(c.tvaTravaux*100)}%)</td><td class="right">${f(c.travauxHT*c.tvaTravaux)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr class="sub"><td>Imprévus + MOE</td><td class="right warn-val">${f(c.travauxContigence+c.travauxMOE)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr class="sub"><td>Diagnostics</td><td class="right">${f(c.diagnostics)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr><td><strong>CHARGES FINANCIÈRES</strong> — ${isInFine2?'In fine Euribor '+fp2(c.tauxAllin,2):'Amortissable '+fp2(v('taux-amort'),2)}</td><td class="right">${f(c.totalFinancement)}</td><td class="right">${fp2(c.totalFinancement/c.coutRevient*100)}</td><td class="right">${f(c.totalFinancement/c.surface,0)}</td></tr>
+      <tr class="sub"><td>Intérêts (${c.dureePortage} mois portage)</td><td class="right neg-val">${f(c.totalInterets)}</td><td class="right">—</td><td class="right">—</td></tr>
+      ${isInFine2&&c.totalCommNu>0?`<tr class="sub"><td>Commission non-utilisation</td><td class="right warn-val">${f(c.totalCommNu)}</td><td class="right">—</td><td class="right">—</td></tr>`:''}
+      <tr class="sub"><td>Frais dossier + garantie hypothécaire</td><td class="right">${f(c.fraisDossier+c.garantie)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr><td><strong>FRAIS DE PORTAGE</strong></td><td class="right">${f(c.totalPortage)}</td><td class="right">${fp2(c.totalPortage/c.coutRevient*100)}</td><td class="right">${f(c.totalPortage/c.surface,0)}</td></tr>
+      <tr class="sub"><td>Taxe foncière proratisée</td><td class="right">${f(c.taxeFonciere)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr class="sub"><td>Assurance PNO + charges</td><td class="right">${f(c.assurancePNO+c.chargesCopro)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr class="sub"><td>Frais gestion opération</td><td class="right">${f(c.fraisGestion)}</td><td class="right">—</td><td class="right">—</td></tr>
+      <tr><td><strong>COMMERCIALISATION</strong></td><td class="right">${f(c.totalVente)}</td><td class="right">${fp2(c.totalVente/c.coutRevient*100)}</td><td class="right">${f(c.totalVente/c.surface,0)}</td></tr>
+      <tr class="total"><td>COÛT DE REVIENT TOTAL</td><td class="right">${f(c.coutRevient)}</td><td class="right">100%</td><td class="right">${f(c.prixRevientM2,0)}</td></tr>
+      <tr style="background:#f0fdf4"><td><strong>Prix de vente cible</strong></td><td class="right pos-val"><strong>${f(c.prixVente)}</strong></td><td class="right pos-val">${fp2(c.margeBrutePct)}</td><td class="right pos-val">${f(c.prixVente/c.surface,0)}</td></tr>
+    </table>
+  </div>
+
+  <!-- 4. FISCAL -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">4. Analyse fiscale</div>
+    <div class="pdf-two-col">
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Compte de résultat prévisionnel</div>
+        <div class="pdf-infobox-row"><span class="k">Prix de vente (base IS)</span><span class="v">${f(c.baseImposableIS)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">— Coût de revient total</span><span class="v r">— ${f(c.coutRevient)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">= Marge brute</span><span class="v ${c.margeBrute>=0?'g':'r'}">${f(c.margeBrute)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">— IS (taux eff. ${fp2(c.tauxEffectifIS)})</span><span class="v r">— ${f(c.isTotal)}</span></div>
+        <div class="pdf-infobox-row" style="font-weight:700"><span class="k">= Bénéfice net</span><span class="v ${c.beneficeNet>=0?'g':'r'}">${f(c.beneficeNet)}</span></div>
+      </div>
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Indicateurs bancaires</div>
+        <div class="pdf-infobox-row"><span class="k">ROI sur apport</span><span class="v ${c.roi>=0?'g':'r'}">${fp2(c.roi)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">ROI annualisé</span><span class="v ${c.roiAnnuel>=0?'g':'r'}">${fp2(c.roiAnnuel)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">LTV</span><span class="v ${c.ltv<=75?'g':c.ltv<=85?'':'r'}">${fp2(c.ltv)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Marge nette / m²</span><span class="v ${c.beneficeNet>=0?'g':'r'}">${f(c.beneficeNet/c.surface,0)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">DMTO économisés vs particulier</span><span class="v g">+${f(c.ecoDMTO)}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Régime TVA</span><span class="v">${tvaLabels[c.regimeTva]||'—'}</span></div>
+      </div>
+    </div>
+    <div class="pdf-infobox" style="margin-top:3mm">
+      <div class="pdf-infobox-title">Calcul IS (Art. 219 CGI 2024)</div>
+      <table class="pdf-table" style="margin:0;font-size:7.5pt">
+        <tr><th>Tranche</th><th class="right">Base</th><th class="right">Taux</th><th class="right">Impôt</th></tr>
+        <tr><td>Taux réduit PME (≤ 42 500 €)</td><td class="right">${f(Math.min(c.beneficeImposable,42500))}</td><td class="right">15%</td><td class="right warn-val">${f(c.isTaux15)}</td></tr>
+        <tr><td>Taux normal (> 42 500 €)</td><td class="right">${f(Math.max(0,c.beneficeImposable-42500))}</td><td class="right">25%</td><td class="right warn-val">${f(c.isTaux25)}</td></tr>
+        <tr class="total"><td><strong>IS total</strong></td><td class="right">${f(c.beneficeImposable)}</td><td class="right">${fp2(c.tauxEffectifIS)} eff.</td><td class="right neg-val">${f(c.isTotal)}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. PLANNING -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">5. Planning opérationnel & sécurisation</div>
+    <table class="pdf-table" style="font-size:7.5pt">
+      <tr><th>Étape</th><th>Description</th><th class="right" style="width:15%">Échéance</th></tr>
+      <tr><td><strong>Compromis d'achat</strong></td><td>Levée conditions suspensives, séquestre 5–10%, obtention ligne bancaire</td><td class="right">M0</td></tr>
+      <tr><td><strong>Acte authentique</strong></td><td>Paiement DMTO 0,715% — 1er tirage ligne (achat)</td><td class="right">M1–M2</td></tr>
+      <tr><td><strong>Démarrage chantier</strong></td><td>DOC/DAACT — 1er appel fonds 35% → 2e tirage ligne</td><td class="right">M3</td></tr>
+      <tr><td><strong>Avancement travaux (40%)</strong></td><td>2e appel fonds 40% → 3e tirage</td><td class="right">M${Math.round(c.dureePortage*0.4)}</td></tr>
+      <tr><td><strong>Réception travaux</strong></td><td>PV réception, levée réserves, DPE final, 3e appel 25%</td><td class="right">M${Math.round(c.dureePortage*0.7)}</td></tr>
+      <tr><td><strong>Commercialisation</strong></td><td>Photos, home staging, annonces, ajustement prix marché</td><td class="right">M${Math.round(c.dureePortage*0.8)}</td></tr>
+      <tr><td><strong>Compromis vente</strong></td><td>Instruction prêt acquéreur — purge préemption</td><td class="right">M${c.dureePortage-2}</td></tr>
+      <tr class="total"><td><strong>Acte vente — remboursement ligne in fine</strong></td><td>Encaissement, remboursement capital ${f(c.emprunt)}, IS, calcul résultat</td><td class="right">M${c.dureePortage}</td></tr>
+    </table>
+    <div class="pdf-alert warn" style="margin-top:3mm">
+      <strong>Délai 5 ans (Art. 1115 CGI) :</strong> Revente obligatoire avant le <strong>${new Date(Date.now()+5*365*24*3600*1000).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</strong> pour maintenir le taux DMTO à 0,715%. Dépassement = rappel 5,8065% + 0,2%/mois d'intérêt.
+    </div>
+  </div>
+
+  <!-- 6. SOCIÉTÉ -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">6. Présentation de l'opérateur</div>
+    <div class="pdf-two-col">
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Structure porteuse</div>
+        <div class="pdf-infobox-row"><span class="k">Société</span><span class="v">${company}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Forme juridique</span><span class="v">${sLabels[el('structure').value]||'SAS'}</span></div>
+        <div class="pdf-infobox-row"><span class="k">Code NAF</span><span class="v">6810Z — MDB</span></div>
+        <div class="pdf-infobox-row"><span class="k">Qualification DMTO</span><span class="v g">MDB professionnel art. 1115 CGI</span></div>
+        <div class="pdf-infobox-row"><span class="k">Régime IS</span><span class="v">Art. 219 CGI</span></div>
+      </div>
+      <div class="pdf-infobox">
+        <div class="pdf-infobox-title">Checklist pièces à fournir</div>
+        <div class="pdf-infobox-row"><span class="k">Kbis < 3 mois</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">3 derniers bilans + liasse fiscale</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">Compromis d'achat signé</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">Devis travaux détaillés</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">Diagnostics DPE, amiante, ERP</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">RC Pro + attestation DO</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">Références marché notariales</span><span class="v">☐</span></div>
+        <div class="pdf-infobox-row"><span class="k">Attestation expert-comptable</span><span class="v">☐</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pdf-alert info" style="margin-top:2mm;font-size:6pt"><em>Document établi à titre prévisionnel. Les montants d'impôts, TVA et frais financiers sont des estimations basées sur les données renseignées et sur l'Euribor à la date de simulation. Toute variation de l'Euribor modifie le coût de la ligne in fine. Ce document ne constitue pas un engagement contractuel. Vérifier les données fiscales avec vos conseils (expert-comptable, notaire, avocat fiscaliste).</em></div>
+
+  <div class="pdf-signature-block">
+    <div class="pdf-sig">Signature du représentant légal<br><br><br>Date : ___________</div>
+    <div class="pdf-sig">Cachet de la société<br><br><br>&nbsp;</div>
+  </div>
+  <div class="pdf-footer">
+    <span>${company} — "${opName}"</span>
+    <span>Généré le ${today} · MDB Pro Simulateur · Euribor 3M ${isInFine2?fp2(v('euribor'),2):'n/a'}</span>
+  </div>`;
+
+  el('pdf-overlay').classList.add('open');
+}
+
+// Init
+calc();
+
+// ===== PRO / PAYWALL SYSTEM =====
+const PRO_FEATURES = ['tab-financement','pdf-btn','save-btn','save-panel-wrap'];
+const TOKEN_KEY = 'mdbpro_token';
+
+let isPro = false;
+let saves = [];
+
+async function checkProStatus() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) { setProUI(false); return; }
+
+  try {
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({token})
+    });
+    const data = await res.json();
+    isPro = data.active === true;
+  } catch(e) {
+    // Offline or API error — check token format as fallback
+    isPro = token.length > 10;
+  }
+  setProUI(isPro);
+}
+
+function setProUI(pro) {
+  isPro = pro;
+  const badge = document.getElementById('pro-status-badge');
+  if (badge) {
+    badge.textContent = pro ? '⭐ Pro actif' : 'Gratuit';
+    badge.className = 'pro-status-badge ' + (pro ? 'active' : 'free');
+  }
+
+  // Show/hide pro tab
+  const finTab = document.querySelector('[onclick="switchSection('financement')"]');
+  if (finTab) {
+    finTab.style.opacity = pro ? '1' : '.5';
+    finTab.title = pro ? '' : 'Fonctionnalité Pro — 49€/mois';
+  }
+
+  // PDF button
+  const pdfBtn = document.getElementById('pdf-btn');
+  if (pdfBtn) {
+    pdfBtn.onclick = pro ? openPdf : showProModal;
+    pdfBtn.style.opacity = pro ? '1' : '.7';
+  }
+
+  // Save button
+  const saveBtn = document.getElementById('save-btn');
+  if (saveBtn) saveBtn.style.display = pro ? 'flex' : 'none';
+
+  // Paywall overlays in financement tab
+  const proBlocks = document.querySelectorAll('.pro-block');
+  proBlocks.forEach(b => b.style.display = pro ? 'block' : 'none');
+  const lockedBlocks = document.querySelectorAll('.locked-block');
+  lockedBlocks.forEach(b => b.style.display = pro ? 'none' : 'flex');
+
+  if (pro) loadSaves();
+}
+
+function showProModal(feature='') {
+  document.getElementById('pro-modal').classList.add('open');
+}
+
+function closeProModal() {
+  document.getElementById('pro-modal').classList.remove('open');
+}
+
+function goToPricing() {
+  window.open('/?#pricing', '_blank');
+}
+
+// Called from success.html via postMessage or URL param
+function activateToken(token) {
+  localStorage.setItem(TOKEN_KEY, token);
+  checkProStatus();
+}
+
+// Check token in URL (redirect from Stripe success)
+const urlToken = new URLSearchParams(window.location.search).get('token');
+if (urlToken) {
+  activateToken(urlToken);
+  history.replaceState({}, '', window.location.pathname);
+}
+
+// ===== SAVE SYSTEM (Pro) =====
+const SAVES_KEY = 'mdbpro_saves';
+
+function loadSaves() {
+  try { saves = JSON.parse(localStorage.getItem(SAVES_KEY)) || []; }
+  catch(e) { saves = []; }
+  renderSaves();
+}
+
+function saveSimulation() {
+  if (!isPro) { showProModal(); return; }
+  const name = prompt('Nom de la simulation :', document.getElementById('pdf-op-name')?.value || 'Opération ' + new Date().toLocaleDateString('fr-FR'));
+  if (!name) return;
+  if (saves.length >= 50) { alert('Maximum 50 simulations sauvegardées. Supprimez-en une.'); return; }
+
+  const snap = {
+    id: Date.now(),
+    name,
+    date: new Date().toLocaleDateString('fr-FR'),
+    data: captureFormData()
+  };
+  saves.unshift(snap);
+  localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+  renderSaves();
+}
+
+function captureFormData() {
+  const ids = ['prix-achat','droits-mut','frais-notaire','frais-agence-achat','surface',
+    'apport','emprunt','euribor','spread-bps','tirage-profil','commission-nu',
+    'taux-amort','duree-amort','taux-assur','frais-dossier','garantie',
+    'travaux-ht','tva-travaux','contingence','moe','diagnostics',
+    'duree-portage','taxe-fonciere','assurance-pno','charges-copro','frais-gestion',
+    'prix-vente','hono-vente','frais-notaire-vente','regime-tva','structure'];
+  const snap = { finMode };
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) snap[id] = el.value;
+  });
+  return snap;
+}
+
+function restoreFormData(data) {
+  Object.entries(data).forEach(([k,v]) => {
+    if (k === 'finMode') { setFinMode(v); return; }
+    const el = document.getElementById(k);
+    if (el) el.value = v;
+  });
+  syncDMTO(); syncSpread();
+  ['contingence','moe','hono-vente'].forEach(id => {
+    const el = document.getElementById(id + '-val');
+    if (el) { const input = document.getElementById(id); if(input) el.textContent = parseFloat(input.value).toFixed(id==='contingence'?0:1) + '%'; }
+  });
+  calc();
+}
+
+function loadSave(id) {
+  const s = saves.find(s => s.id === id);
+  if (s) { restoreFormData(s.data); document.getElementById('pdf-op-name').value = s.name; }
+}
+
+function deleteSave(id) {
+  saves = saves.filter(s => s.id !== id);
+  localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+  renderSaves();
+}
+
+function renderSaves() {
+  const container = document.getElementById('saves-list');
+  if (!container) return;
+  if (saves.length === 0) {
+    container.innerHTML = '<div style="font-size:.72rem;color:var(--muted);text-align:center;padding:.75rem">Aucune simulation sauvegardée</div>';
+    return;
+  }
+  container.innerHTML = saves.map(s => `
+    <div class="save-item" onclick="loadSave(${s.id})">
+      <div><div class="save-item-name">${s.name}</div><div class="save-item-meta">${s.date}</div></div>
+      <button class="save-item-del" onclick="event.stopPropagation();deleteSave(${s.id})">✕</button>
+    </div>`).join('');
+}
+
+// Init check
+checkProStatus();
+
+</script>
+
+<!-- PRO MODAL -->
+<div id="pro-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)" onclick="if(event.target===this)closeProModal()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem;max-width:440px;width:90%;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:1rem">🔒</div>
+    <div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;color:var(--accent);margin-bottom:.5rem">Fonctionnalité Pro</div>
+    <p style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.5rem">Cette fonctionnalité est réservée aux abonnés MDB Pro.<br>Export PDF, sensibilité Euribor, tirage mensuel, sauvegarde — 49€/mois.</p>
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <a href="/" class="pro-gate-btn">Passer Pro — 49€/mois →</a>
+      <button onclick="closeProModal()" style="background:transparent;color:var(--muted);border:1px solid var(--border);padding:.6rem 1.2rem;border-radius:8px;cursor:pointer;font-family:var(--fm);font-size:.82rem">Continuer gratuit</button>
+    </div>
+    <div style="font-size:.65rem;color:var(--muted);margin-top:1rem">Sans engagement · Résiliable à tout moment</div>
+  </div>
+</div>
+
+</body>
+</html>
