@@ -1,0 +1,12 @@
+{
+  "name": "mdbpro",
+  "version": "1.0.0",
+  "description": "Simulateur professionnel Marchand de Biens — mdbpro.fr",
+  "private": true,
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
